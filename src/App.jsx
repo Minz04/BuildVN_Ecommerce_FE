@@ -6,6 +6,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 import MainLayout from "./layouts/MainLayout";
+import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import BuildPC from "./pages/BuildPC";
@@ -17,6 +18,7 @@ import Register from "./pages/Register";
 const App = () => {
   return (
     <Router>
+      <ScrollToTop />
       <ToastContainer position="top-right" autoClose={3000} />
       <Routes>
         <Route element={<MainLayout />}>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { Search, Phone, Monitor, ShoppingCart, Menu, ChevronDown, ChevronRight, Cpu, Gamepad2, Laptop, MonitorPlay, User } from 'lucide-react';
+import { Search, Phone, Monitor, ShoppingCart, Menu, ChevronDown, ChevronRight, Cpu, Gamepad2, Laptop, MonitorPlay, User, LogOut } from 'lucide-react'; // Thêm icon LogOut
 import { useNavigate, Link } from 'react-router-dom';
 import { mockCategories, mockVerticalMenu, mockMainMenu } from '../mock/categoryData';
 import { AppContext } from '../context/AppContext';
@@ -28,48 +28,52 @@ const Navbar = () => {
 
   // Context và Navigation
   const navigate = useNavigate();
-  const { cart } = useContext(AppContext); 
+  // BƯỚC 1: Lấy user và setUser ra từ Context
+  const { cart, user, setUser } = useContext(AppContext); 
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleSearch = () => {
     if (searchTerm.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchTerm)}`);
+      navigate(`/products?search=${encodeURIComponent(searchTerm.trim())}`);
     }
   };
 
+  // BƯỚC 2: Hàm xử lý Đăng xuất
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token'); // Xóa token để an toàn
+    navigate('/login'); // Đá văng về trang đăng nhập
+  };
+
   useEffect(() => {
-    // FIX TRIỆT ĐỂ LỖI NHẤP NHÁY VÀ LỖI CONSOLE (Tạo khoảng đệm Hysteresis)
     const handleScroll = () => {
       if (window.scrollY > 120) {
-        setIsScrolled(true);  // Cuộn qua 120px thì mới ẩn Hàng 2
+        setIsScrolled(true); 
       } else if (window.scrollY < 50) {
-        setIsScrolled(false); // Cuộn ngược lên dưới mốc 50px thì mới hiện lại Hàng 2
+        setIsScrolled(false);
       }
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // CLICK RA NGOÀI ĐỂ ĐÓNG MENU
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (categoryRef.current && !categoryRef.current.contains(event.target)) {
         setOpenCategory(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
-    // THÊM: Nền trắng có độ trong suốt nhẹ (bg-white/95) và blur để tạo cảm giác kính khi cuộn
     <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] transition-all duration-300">
       
-      {/* TÌM KIẾM & CÔNG CỤ */}
       <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-6">
         
-        {/* Logo - Đổi thành Gradient Cyan -> Blue giống trang Home */}
+        {/* Logo */}
         <Link to="/" className="flex-shrink-0 group">
           <h1 className="text-3xl font-black italic tracking-tighter">
             <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent group-hover:from-cyan-400 group-hover:to-blue-500 transition-all">BUILD</span>
@@ -77,12 +81,10 @@ const Navbar = () => {
           </h1>
         </Link>
 
-        {/* KHUNG TÌM KIẾM - Viền tinh tế, khi focus sẽ đổi màu Cyan */}
-        <div className="flex-grow max-w-3xl flex items-center border-2 border-gray-200 focus-within:border-cyan-500 focus-within:shadow-[0_0_10px_rgba(6,182,212,0.2)] rounded-lg bg-white transition-all duration-300">
+        {/* KHUNG TÌM KIẾM */}
+        <div className="flex-grow max-w-3xl flex items-center border-2 border-gray-200 focus-within:border-cyan-500 focus-within:shadow-[0_0_10px_rgba(6,182,212,0.2)] rounded-lg bg-white transition-all duration-300 relative">
 
-          {/* TẤT CẢ DANH MỤC */}
           <div ref={categoryRef} className="relative h-full">
-
             <div
               onClick={() => setOpenCategory(prev => !prev)}
               className={`px-4 py-2.5 flex items-center gap-1.5 cursor-pointer text-[14px] font-bold whitespace-nowrap h-full transition-all rounded-l-md
@@ -113,18 +115,27 @@ const Navbar = () => {
             <div className="absolute right-0 top-1/2 -translate-y-1/2 h-1/2 w-[1px] bg-gray-200"></div>
           </div>
 
-          <input type="text" placeholder="Tìm kiếm sản phẩm, linh kiện..." value={searchTerm} className="flex-grow px-4 py-2.5 outline-none text-[15px] text-gray-800 placeholder-gray-400 font-medium"
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()} 
-          />
+          {/* INPUT TÌM KIẾM CƠ BẢN */}
+          <div className="relative flex-grow h-full flex items-center">
+            <input
+              type="text"
+              placeholder="Tìm kiếm sản phẩm, linh kiện..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="w-full px-4 py-2.5 outline-none text-[15px] text-gray-800 placeholder-gray-400 font-medium bg-transparent"
+            />
+          </div>
 
-          {/* Nút Tìm Kiếm - Gradient xanh */}
-          <button onClick={handleSearch} className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 cursor-pointer px-7 py-2.5 text-white flex items-center justify-center transition-all rounded-r-md">
+          <button 
+            onClick={handleSearch} 
+            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 cursor-pointer px-7 py-2.5 text-white flex items-center justify-center transition-all rounded-r-md h-full"
+          >
             <Search size={20} />
           </button>
         </div>
 
-        {/* CÔNG CỤ (ICONS) - Thiết kế lại bằng nền xám nhạt, hover lên màu Cyan */}
+        {/* CÔNG CỤ */}
         <div className="flex items-center gap-5">
           
           <div className="flex items-center gap-3 cursor-pointer group">
@@ -157,14 +168,43 @@ const Navbar = () => {
             <div className="text-[14px] font-black text-gray-800 group-hover:text-cyan-600 transition-colors hidden lg:block">Giỏ hàng</div>
           </Link>
 
-          <Link to="/login" className="flex items-center gap-3 group">
-            <div className="p-2.5 bg-gray-100 group-hover:bg-cyan-50 text-gray-500 group-hover:text-cyan-600 rounded-full transition-colors duration-300">
-              <User size={20} />
+          {/* BƯỚC 3: KIỂM TRA ĐĂNG NHẬP */}
+          {user ? (
+            // NẾU ĐÃ ĐĂNG NHẬP -> Hiện Tên + Menu Đăng xuất
+            <div className="relative group cursor-pointer flex items-center gap-3">
+              <div className="p-2.5 bg-cyan-100 text-cyan-600 rounded-full transition-colors duration-300">
+                <User size={20} />
+              </div>
+              <div className="text-[14px] hidden lg:block">
+                <p className="text-gray-500 font-medium leading-tight">Xin chào,</p>
+                <p className="font-black text-gray-800 line-clamp-1 max-w-[100px] group-hover:text-cyan-600 transition-colors">{user.fullname || user.email}</p>
+              </div>
+
+              {/* Dropdown Đăng xuất */}
+              <div className="absolute top-full right-0 mt-2 w-48 bg-white shadow-lg border border-gray-100 rounded-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-cyan-600 font-semibold">Tài khoản của tôi</Link>
+                <Link to="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-cyan-600 font-semibold">Đơn hàng mua</Link>
+                <div className="border-t border-gray-100 my-1"></div>
+                <button 
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-bold flex items-center gap-2"
+                >
+                  <LogOut size={16} /> Đăng xuất
+                </button>
+              </div>
             </div>
-            <div className="text-[14px] hidden lg:block">
-              <p className="font-black text-gray-800 group-hover:text-cyan-600 transition-colors">Đăng nhập</p>
-            </div>
-          </Link>
+          ) : (
+            // NẾU CHƯA ĐĂNG NHẬP -> Hiện nút Login
+            <Link to="/login" className="flex items-center gap-3 group">
+              <div className="p-2.5 bg-gray-100 group-hover:bg-cyan-50 text-gray-500 group-hover:text-cyan-600 rounded-full transition-colors duration-300">
+                <User size={20} />
+              </div>
+              <div className="text-[14px] hidden lg:block">
+                <p className="text-gray-500 font-medium leading-tight">Tài khoản</p>
+                <p className="font-black text-gray-800 group-hover:text-cyan-600 transition-colors">Đăng nhập</p>
+              </div>
+            </Link>
+          )}
 
         </div>
       </div>
@@ -174,7 +214,6 @@ const Navbar = () => {
         <div className={isScrolled ? "overflow-hidden" : "overflow-visible"}>
           <div className="container mx-auto px-4 flex items-center pt-2 pb-1">
 
-            {/* MENU DỌC - Đổi màu nền sang Xám đen Slate-900 sang trọng hơn */}
             <div className="relative group">
               <div className="bg-slate-900 text-white flex items-center gap-2 px-6 py-3 cursor-pointer font-bold text-[15px] uppercase min-w-[260px] rounded-t-lg shadow-sm">
                 <Menu size={20} />
@@ -200,7 +239,6 @@ const Navbar = () => {
               </div>
             </div>
 
-            {/* MENU NGANG */}
             <nav className="flex items-center justify-between flex-grow pl-8">
               {categories.map((cat) => (
                 <div key={cat.id} className="relative group py-3">
@@ -217,7 +255,6 @@ const Navbar = () => {
                     )}
                   </Link>
 
-                  {/* Mega Menu Dropdown */}
                   {cat.subMenu && cat.subMenu.length > 0 && (
                     <div className="absolute top-[100%] left-0 pt-2 hidden group-hover:block z-[100]">
                       <div className="bg-white shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 p-7 flex gap-8 w-max cursor-default rounded-xl">

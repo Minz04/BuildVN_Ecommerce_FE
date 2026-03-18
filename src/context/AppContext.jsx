@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
+  const [ user, setUser ] = useState(null);
   const [cart, setCart] = useState(() => {
     const savedCart = localStorage.getItem('cart');
     return savedCart ? JSON.parse(savedCart) : [];
@@ -34,6 +35,12 @@ export const AppProvider = ({ children }) => {
         return [...prevCart, { ...product, quantity: 1 }];
       }
     });
+
+    return (
+      <AppContext.Provider value={{ cart, addToCart, updateQuantity, removeFromCart, getCartTotal, user, setUser }}>
+        {children}
+      </AppContext.Provider>
+    );
   };
 
   // 2. Hàm Tăng/Giảm số lượng

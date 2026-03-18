@@ -1,14 +1,17 @@
 import React, { useState, useRef, useContext } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { ShoppingCart, CheckCircle2, Heart } from 'lucide-react';
+import { toast } from 'react-toastify';
+
 import { AppContext } from '../context/AppContext';
 
 const ProductCard = ({ product }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const tooltipRef = useRef(null);
-  const { addToCart } = useContext(AppContext);
+  const { addToCart, user } = useContext(AppContext);
+  const navigate = useNavigate();
   
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -41,6 +44,14 @@ const ProductCard = ({ product }) => {
   const handleFavoriteClick = (e) => {
     e.preventDefault(); 
     e.stopPropagation(); 
+    
+    // NẾU CHƯA ĐĂNG NHẬP -> CHẶN
+    if (!user) {
+      toast.warning("Vui lòng đăng nhập để thêm vào Yêu thích!");
+      navigate('/login');
+      return; 
+    }
+
     setIsFavorite(!isFavorite);
   };
 
@@ -166,7 +177,16 @@ const ProductCard = ({ product }) => {
             onClick={(e) => { 
               e.preventDefault();
               e.stopPropagation();
-              addToCart(product);
+
+              // NẾU CHƯA ĐĂNG NHẬP -> CHẶN
+              if (!user) {
+                toast.warning("Bạn cần đăng nhập để mua hàng!");
+                navigate('/login');
+                return; 
+              }
+
+              // Nếu đã đăng nhập -> cho phép thêm giỏ hàng
+              addToCart(product); 
             }}
             disabled={product.stockQuantity === 0} 
             className={`flex items-center gap-2 font-black text-[14px] group/btn 

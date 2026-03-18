@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Phone, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { mockAuthAPI } from '../mock/authMock'; 
+import { AppContext } from '../context/AppContext'; // BƯỚC 1: Import Context
 
 const Login = () => {
   const navigate = useNavigate();
+  // BƯỚC 2: Lấy hàm setUser ra để lưu trạng thái đăng nhập
+  const { setUser } = useContext(AppContext); 
+
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -60,11 +64,15 @@ const Login = () => {
       rememberMe: formData.rememberMe
     })
     .then(response => {
+      // Lưu vào ổ cứng
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       
+      // BƯỚC 3: Lưu vào State chung của hệ thống
+      setUser(response.data.user); 
+
       toast.success('Đăng nhập thành công!');
-      // navigate('/'); 
+      navigate('/'); // BƯỚC 4: Bật lại lệnh chuyển về trang chủ
     })
     .catch(error => {
       const errorMessage = error.response?.data?.message || 'Lỗi kết nối';

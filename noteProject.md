@@ -1,0 +1,2 @@
+- API lịch sử tìm kiếm. (Chưa cần)
+-

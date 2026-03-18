@@ -5,7 +5,7 @@ import { Timer, ChevronRight, Zap, TrendingUp, Newspaper, Sparkles } from 'lucid
 import ProductCard from '../components/ProductCard';
 import { mockBanners, mockProducts, mockNews } from '../mock/homeMockData';
 
-// ================= COMPONENT DANH MỤC =================
+// COMPONENT DANH MỤC 
 const CategorySection = ({ title, slug, products }) => {
   const filteredProducts = products.filter(p => p.categorySlug === slug);
   const displayProducts = filteredProducts.length > 0 ? filteredProducts : products.slice(0, 5);
@@ -38,14 +38,20 @@ const CategorySection = ({ title, slug, products }) => {
   );
 };
 
-// ================= TRANG CHỦ MAIN =================
+// TRANG CHỦ MAIN 
 const Home = () => {
   
-  // LOGIC ĐẾM NGƯỢC THỜI GIAN ĐẾN CUỐI NGÀY
+  // LOGIC ĐẾM NGƯỢC THEO KHUNG 3 TIẾNG 
   const calculateTimeLeft = () => {
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
-    const difference = endOfDay - new Date();
+    const now = new Date();
+    const nextSlot = new Date(now);
+    
+    // Lấy giờ hiện tại và tìm mốc 3 tiếng tiếp theo
+    const currentHour = now.getHours();
+    const hoursToAdd = 3 - (currentHour % 3); 
+    
+    nextSlot.setHours(currentHour + hoursToAdd, 0, 0, 0); 
+    const difference = nextSlot - now;
 
     if (difference > 0) {
       return {
@@ -87,10 +93,9 @@ const Home = () => {
   };
 
   return (
-    // THÊM HOẠT TIẾT NỀN CHÌM (Dotted Grid Pattern) cực nhẹ cho toàn trang
     <div className="min-h-screen bg-[#f8fafc] bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px]">
       
-      {/* ================= KHỐI 1: BANNERS ================= */}
+      {/* BANNERS */}
       <section className="pb-8 pt-6">
         <div className="container mx-auto px-4">
           {/* Banner chính với hiệu ứng Shadow xịn xò */}
@@ -121,7 +126,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ================= KHỐI 2: FLASH SALE (NEON GRADIENT) ================= */}
+      {/* FLASH SALE   */}
       <section className="py-14 relative overflow-hidden bg-gradient-to-r from-[#00c6ff] via-[#0072ff] to-[#bd00ff]">
         
         {/* HIỆU ỨNG TRANG TRÍ MỜ BÊN DƯỚI NỀN (Css Blur cực nhẹ) */}
@@ -144,17 +149,37 @@ const Home = () => {
               </h2>
               
               {/* BỘ ĐẾM GIỜ */}
-              <div className="flex items-center gap-2 text-xl font-black ml-4">
-                <span className="bg-white/20 backdrop-blur-md text-white shadow-[0_4px_10px_rgba(0,0,0,0.1)] border border-white/30 px-3 py-1 rounded-lg">
-                  {String(timeLeft.hours).padStart(2, '0')}
-                </span> :
-                <span className="bg-white/20 backdrop-blur-md text-white shadow-[0_4px_10px_rgba(0,0,0,0.1)] border border-white/30 px-3 py-1 rounded-lg">
-                  {String(timeLeft.minutes).padStart(2, '0')}
-                </span> :
-                <span className="bg-white/20 backdrop-blur-md text-white shadow-[0_4px_10px_rgba(0,0,0,0.1)] border border-white/30 px-3 py-1 rounded-lg">
-                  {String(timeLeft.seconds).padStart(2, '0')}
-                </span> 
+              <div className="flex items-center gap-3 text-xl font-black ml-4">
+                {/* Giờ */}
+                <div className="flex flex-col items-center">
+                  <span className="bg-white text-gray-900 shadow-[0_4px_10px_rgba(0,0,0,0.2)] border-b-4 border-gray-300 w-12 h-12 flex items-center justify-center rounded-lg text-2xl">
+                    {String(timeLeft.hours).padStart(2, '0')}
+                  </span>
+                  <span className="text-[10px] uppercase font-bold mt-1 text-white/80 tracking-wider">Giờ</span>
+                </div>
+                
+                <span className="text-white text-2xl pb-4 animate-pulse">:</span>
+
+                {/* Phút */}
+                <div className="flex flex-col items-center">
+                  <span className="bg-white text-gray-900 shadow-[0_4px_10px_rgba(0,0,0,0.2)] border-b-4 border-gray-300 w-12 h-12 flex items-center justify-center rounded-lg text-2xl">
+                    {String(timeLeft.minutes).padStart(2, '0')}
+                  </span>
+                  <span className="text-[10px] uppercase font-bold mt-1 text-white/80 tracking-wider">Phút</span>
+                </div>
+
+                <span className="text-white text-2xl pb-4 animate-pulse">:</span>
+
+                {/* Giây */}
+                <div className="flex flex-col items-center">
+                  <span className={`${timeLeft.hours === 0 ? 'bg-[#ff4d4f] text-white border-[#cf1322]' : 'bg-white text-gray-900 border-gray-300'} shadow-[0_4px_10px_rgba(0,0,0,0.2)] border-b-4 w-12 h-12 flex items-center justify-center rounded-lg text-2xl transition-colors duration-300`}>
+                    {String(timeLeft.seconds).padStart(2, '0')}
+                  </span>
+                  <span className="text-[10px] uppercase font-bold mt-1 text-white/80 tracking-wider">Giây</span>
+                </div>
+                
               </div>
+
             </div>
           </div>
 
@@ -182,7 +207,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ================= KHỐI 3: SẢN PHẨM BÁN CHẠY ================= */}
+      {/* SẢN PHẨM BÁN CHẠY */}
       <section className="py-14 bg-white border-b border-gray-100 relative">
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex items-center justify-center gap-3 mb-10 relative">
@@ -200,7 +225,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ================= KHỐI 4 -> 9: 6 DANH MỤC SẢN PHẨM ================= */}
+      {/* DANH MỤC SẢN PHẨM */}
       <CategorySection title="Laptop Cao Cấp" slug="laptop" products={mockProducts} />
       <CategorySection title="PC Gaming" slug="pc-gaming" products={mockProducts} />
       <CategorySection title="PC Đồ họa" slug="pc-do-hoa" products={mockProducts} />
@@ -208,7 +233,7 @@ const Home = () => {
       <CategorySection title="PC AI - Trí tuệ nhân tạo" slug="pc-ai" products={mockProducts} />
       <CategorySection title="Màn hình máy tính" slug="man-hinh" products={mockProducts} />
 
-      {/* ================= KHỐI 10: TIN TỨC ================= */}
+      {/* TIN TỨC */}
       <section className="py-16 bg-[#f8fafc] border-t border-gray-200">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-3 mb-10">
