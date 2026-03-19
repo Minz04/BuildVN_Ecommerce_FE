@@ -2,8 +2,8 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Phone, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { mockAuthAPI } from '../mock/authMock'; 
-import { AppContext } from '../context/AppContext'; // BƯỚC 1: Import Context
+import { authApi } from '../services/authApi';
+import { AppContext } from '../context/AppContext';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -58,29 +58,23 @@ const Login = () => {
 
     setIsLoading(true);
 
-    mockAuthAPI.login({
-      email: formData.email,
-      password: formData.password,
-      rememberMe: formData.rememberMe
-    })
-    .then(response => {
-      // Lưu vào ổ cứng
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      
-      // BƯỚC 3: Lưu vào State chung của hệ thống
-      setUser(response.data.user); 
-
-      toast.success('Đăng nhập thành công!');
-      navigate('/'); // BƯỚC 4: Bật lại lệnh chuyển về trang chủ
-    })
-    .catch(error => {
-      const errorMessage = error.response?.data?.message || 'Lỗi kết nối';
-      toast.error(errorMessage);
-    })
-    .finally(() => {
-      setIsLoading(false);
-    });
+    authApi.login({
+    email: formData.email,
+    password: formData.password
+  })
+  .then(response => {
+    // Lưu Token thật do BE trả về
+    localStorage.setItem('token', response.data.token); 
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    setUser(response.data.user); 
+    toast.success('Đăng nhập thành công!');
+    navigate('/');
+  })
+  .catch(error => {
+    const errorMessage = error.response?.data?.message || 'Sai tài khoản hoặc mật khẩu';
+    toast.error(errorMessage);
+  })
+  .finally(() => setIsLoading(false));
   };
 
   return (

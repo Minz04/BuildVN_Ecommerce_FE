@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import Slider from 'react-slick';
 import { Timer, ChevronRight, Zap, TrendingUp, Newspaper, Sparkles } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
-import { mockBanners, mockProducts, mockNews } from '../mock/homeMockData';
+// import { mockBanners, mockProducts, mockNews } from '../mock/homeMockData';
+import { productApi } from '../services/productApi';
 
 // COMPONENT DANH MỤC 
 const CategorySection = ({ title, slug, products }) => {
@@ -40,7 +41,10 @@ const CategorySection = ({ title, slug, products }) => {
 
 // TRANG CHỦ MAIN 
 const Home = () => {
-  
+  // Chứa dữ liệu thật 
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   // LOGIC ĐẾM NGƯỢC THEO KHUNG 3 TIẾNG 
   const calculateTimeLeft = () => {
     const now = new Date();
@@ -71,6 +75,23 @@ const Home = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // 
+  useEffect(() => {
+    const fetchHomeData = async () => {
+      try {
+        const productRes = await productApi.getAllProducts();
+        setProducts(productRes.data); // Đổ data BE vào State
+      } catch (error) {
+        console.error("Lỗi lấy dữ liệu trang chủ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHomeData();
+  }, []);
+
+  if (loading) return <div>Đang tải dữ liệu...</div>;
 
   const bannerSettings = {
     dots: true, infinite: true, speed: 800, slidesToShow: 1, slidesToScroll: 1, autoplay: true, autoplaySpeed: 4000, arrows: false, fade: true
@@ -217,9 +238,9 @@ const Home = () => {
             <TrendingUp size={32} className="text-[#e30019] relative z-10" />
             <h2 className="text-3xl font-black text-gray-900 uppercase relative z-10">Sản phẩm bán chạy</h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {mockProducts.slice(0, 5).map(product => (
-               <ProductCard key={product._id} product={product} />
+          <div className="grid grid-cols-5 gap-4">
+            {products.slice(0, 5).map(product => (
+                <ProductCard key={product._id} product={product} />
             ))}
           </div>
         </div>

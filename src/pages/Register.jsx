@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { mockAuthAPI } from '../mock/authMock'; 
+// XÓA DÒNG NÀY: import { mockAuthAPI } from '../mock/authMock'; 
+// THÊM DÒNG NÀY:
+import { authApi } from '../services/authApi'; 
 
 // FIX LỖI VĂNG FOCUS: Di chuyển InputField ra ngoài Component chính
 const InputField = ({ label, type, name, placeholder, value, onChange, onBlur, error }) => (
@@ -63,7 +65,7 @@ const Register = () => {
     if (name === 'password') {
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
       if (!passwordRegex.test(value)) {
-        error = 'Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt';
+        error = 'Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, thường, số và ký tự đặc biệt';
       }
     }
 
@@ -116,13 +118,15 @@ const Register = () => {
 
     console.log("Dữ liệu Register chuẩn bị gửi đi:", registerData);
 
-    mockAuthAPI.register(registerData)
+    // GỌI API THẬT
+    authApi.register(registerData)
     .then(response => {
       toast.success('Đăng ký thành công! Đang chuyển hướng...');
       setTimeout(() => navigate('/login'), 1500); 
     })
     .catch(error => {
-      const errorMessage = error.response?.data?.message || 'Lỗi kết nối';
+      // Lấy lỗi từ Backend trả về (VD: "Email đã tồn tại")
+      const errorMessage = error.response?.data?.message || 'Lỗi kết nối đến máy chủ';
       toast.error(errorMessage);
     })
     .finally(() => {
@@ -158,7 +162,7 @@ const Register = () => {
             <label className="text-sm font-bold text-gray-900">Create a Password <span className="text-red-500 ml-1">*</span></label>
             <div className="relative">
               <input 
-                type={showPassword ? "text" : "password"} name="password" placeholder="Mật khẩu (ít nhất 6 ký tự)"
+                type={showPassword ? "text" : "password"} name="password" placeholder="Mật khẩu (ít nhất 8 ký tự)"
                 value={formData.password} onChange={handleChange} onBlur={handleBlur}
                 className={`w-full px-4 py-3 bg-white border rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors pr-12
                   ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-cyan-500 hover:border-gray-400'}`}
