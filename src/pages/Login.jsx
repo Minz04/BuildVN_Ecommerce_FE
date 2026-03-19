@@ -46,8 +46,6 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    console.log("Dữ liệu Login chuẩn bị gửi đi:", formData);
 
     const emailErr = validateField('email', formData.email);
     const passErr = validateField('password', formData.password);
@@ -66,7 +64,7 @@ const Login = () => {
     // Lưu Token thật do BE trả về
     localStorage.setItem('token', response.data.token); 
     localStorage.setItem('user', JSON.stringify(response.data.user));
-    setUser(response.data.user); 
+    //setUser(response.data.user); 
     toast.success('Đăng nhập thành công!');
     navigate('/');
   })

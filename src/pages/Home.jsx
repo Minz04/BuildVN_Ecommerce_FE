@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Slider from 'react-slick';
 import { Timer, ChevronRight, Zap, TrendingUp, Newspaper, Sparkles } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
-// import { mockBanners, mockProducts, mockNews } from '../mock/homeMockData';
+import { mockBanners, mockProducts, mockNews } from '../mock/homeMockData';
 import { productApi } from '../services/productApi';
 
 // COMPONENT DANH MỤC 

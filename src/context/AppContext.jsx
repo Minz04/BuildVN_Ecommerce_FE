@@ -4,7 +4,10 @@ import { toast } from 'react-toastify';
 export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-  const [ user, setUser ] = useState(null);
+  const [user, setUser] = useState(() => {  
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [cart, setCart] = useState(() => {
     const savedCart = localStorage.getItem('cart');
     return savedCart ? JSON.parse(savedCart) : [];
@@ -71,7 +74,7 @@ export const AppProvider = ({ children }) => {
   };
 
   return (
-    <AppContext.Provider value={{ cart, addToCart, updateQuantity, removeFromCart, getCartTotal }}>
+    <AppContext.Provider value={{ cart, addToCart, updateQuantity, removeFromCart, getCartTotal, user, setUser }}>
       {children}
     </AppContext.Provider>
   );

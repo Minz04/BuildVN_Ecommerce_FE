@@ -116,8 +116,6 @@ const Register = () => {
 
     const { confirmPassword, ...registerData } = formData; 
 
-    console.log("Dữ liệu Register chuẩn bị gửi đi:", registerData);
-
     // GỌI API THẬT
     authApi.register(registerData)
     .then(response => {
