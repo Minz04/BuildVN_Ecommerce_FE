@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 const axiosClient = axios.create({
-  // Đổi port 5000 thành port BE của bạn đang chạy
-  baseURL: 'http://localhost:3000/', 
+  baseURL: 'http://localhost:3000/api', 
   headers: {
     'Content-Type': 'application/json',
   },

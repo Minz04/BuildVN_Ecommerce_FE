@@ -59,9 +59,9 @@ const Login = () => {
     setIsLoading(true);
 
     authApi.login({
-    email: formData.email,
-    password: formData.password
-  })
+      email: formData.email.trim(),
+      password: formData.password
+    })
   .then(response => {
     // Lưu Token thật do BE trả về
     localStorage.setItem('token', response.data.token); 
