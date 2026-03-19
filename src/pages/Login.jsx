@@ -61,12 +61,11 @@ const Login = () => {
       password: formData.password
     })
   .then(response => {
-    // Lưu Token thật do BE trả về
     localStorage.setItem('token', response.data.token); 
-    localStorage.setItem('user', JSON.stringify(response.data.user));
-    //setUser(response.data.user); 
-    toast.success('Đăng nhập thành công!');
-    navigate('/');
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      setUser(response.data.user); 
+      toast.success('Đăng nhập thành công!');
+      navigate('/');
   })
   .catch(error => {
     const errorMessage = error.response?.data?.message || 'Sai tài khoản hoặc mật khẩu';

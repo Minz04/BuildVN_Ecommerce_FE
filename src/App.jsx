@@ -6,6 +6,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 import MainLayout from "./layouts/MainLayout";
+import { AppProvider } from './context/AppContext';
 import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
@@ -16,22 +17,24 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 
 const App = () => {
-  return (
-    <Router>
-      <ScrollToTop />
-      <ToastContainer position="top-right" autoClose={3000} />
-      <Routes>
-        <Route element={<MainLayout />}>
-          <Route path='/' element={<Home />} />
-          <Route path='/products' element={<Products />} />  
-          <Route path='/buildpc' element={<BuildPC />} />  
-          <Route path='/contact' element={<Contact />} />  
-          <Route path='/cart' element={<Cart />} />  
-          <Route path='/login' element={<Login />} />
-          <Route path='/register' element={<Register />} />
-        </Route>
-      </Routes> 
-    </Router>
+  return (      
+    <AppProvider> 
+      <Router>
+        <ScrollToTop />
+        <ToastContainer position="top-right" autoClose={3000} />
+        <Routes>
+          <Route element={<MainLayout />}>
+            <Route path='/' element={<Home />} />
+            <Route path='/products' element={<Products />} />  
+            <Route path='/buildpc' element={<BuildPC />} />  
+            <Route path='/contact' element={<Contact />} />  
+            <Route path='/cart' element={<Cart />} />  
+            <Route path='/login' element={<Login />} />
+            <Route path='/register' element={<Register />} />
+          </Route>
+        </Routes> 
+      </Router>
+    </AppProvider>                          
   )
 }
 
