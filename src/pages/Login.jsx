@@ -61,12 +61,23 @@ const Login = () => {
       password: formData.password
     })
   .then(response => {
-    localStorage.setItem('token', response.data.token); 
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      setUser(response.data.user); 
+      const { token, user } = response.data;
+
+      // Kiểm tra Remember Me để lưu token và user vào localStorage hoặc sessionStorage
+      if (formData.rememberMe) {
+        // Lưu vào localStorage để giữ đăng nhập lâu dài
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+      } else {
+        // Lưu vào sessionStorage để giữ đăng nhập ngắn hạn
+        sessionStorage.setItem('token', token);
+        sessionStorage.setItem('user', JSON.stringify(user));
+      }
+
+      setUser(user); 
       toast.success('Đăng nhập thành công!');
       navigate('/');
-  })
+    })
   .catch(error => {
     const errorMessage = error.response?.data?.message || 'Sai tài khoản hoặc mật khẩu';
     toast.error(errorMessage);
@@ -146,9 +157,11 @@ const Login = () => {
               />
               <span className="text-sm text-gray-700">Remember me</span>
             </label>
-            <a href="#" className="text-gray-600 hover:text-cyan-600 hover:underline font-semibold text-sm transition-colors">
+            <button type="button" onClick={() => toast.info('Vui lòng liên hệ Hotline: 098.655.2233 hoặc Admin để được cấp lại mật khẩu mới.')} 
+              className="text-gray-600 hover:text-cyan-600 hover:underline font-semibold text-sm transition-colors"
+            >
               Forgot your password?
-            </a>
+            </button>
           </div>
 
           <button 

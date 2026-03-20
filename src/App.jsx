@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
+import { ProtectedRoute, GuestRoute } from './routes/AuthGuards';
 import MainLayout from "./layouts/MainLayout";
 import { AppProvider } from './context/AppContext';
 import ScrollToTop from "./components/ScrollToTop";
@@ -28,13 +29,21 @@ const App = () => {
             <Route path='/products' element={<Products />} />  
             <Route path='/buildpc' element={<BuildPC />} />  
             <Route path='/contact' element={<Contact />} />  
-            <Route path='/cart' element={<Cart />} />  
-            <Route path='/login' element={<Login />} />
-            <Route path='/register' element={<Register />} />
+
+            {/* TRẠM 1: CHỈ KHÁCH CHƯA ĐĂNG NHẬP */}
+            <Route element={<GuestRoute />}>
+              <Route path='/login' element={<Login />} />
+              <Route path='/register' element={<Register />} />
+            </Route>
+
+            {/* TRẠM 2: CHỈ NGƯỜI ĐÃ ĐĂNG NHẬP */}
+            <Route element={<ProtectedRoute />}>
+              <Route path='/cart' element={<Cart />} />
+            </Route>
           </Route>
         </Routes> 
       </Router>
-    </AppProvider>                          
+    </AppProvider>
   )
 }
 

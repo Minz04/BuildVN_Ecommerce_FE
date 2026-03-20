@@ -3,12 +3,13 @@ import { Link } from 'react-router-dom';
 import Slider from 'react-slick';
 import { Timer, ChevronRight, Zap, TrendingUp, Newspaper, Sparkles } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
-import { mockBanners, mockProducts, mockNews } from '../mock/homeMockData';
+import { mockBanners, mockNews } from '../mock/homeMockData'; // Đã gỡ bỏ mockProducts vì dùng data thật
 import { productApi } from '../services/productApi';
 
-// COMPONENT DANH MỤC 
+// COMPONENT DANH MỤC (Đã cập nhật logic lọc theo DB thật)
 const CategorySection = ({ title, slug, products }) => {
-  const filteredProducts = products.filter(p => p.categorySlug === slug);
+  // DB trả về product.category là 1 object { _id, name, slug... } nhờ lệnh populate
+  const filteredProducts = products.filter(p => p.category?.slug === slug || p.categorySlug === slug);
   const displayProducts = filteredProducts.length > 0 ? filteredProducts : products.slice(0, 5);
 
   return (
@@ -41,7 +42,7 @@ const CategorySection = ({ title, slug, products }) => {
 
 // TRANG CHỦ MAIN 
 const Home = () => {
-  // Chứa dữ liệu thật 
+  // Chứa dữ liệu thật từ Backend
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -76,7 +77,7 @@ const Home = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // 
+  // GỌI API LẤY DỮ LIỆU THẬT
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
@@ -91,7 +92,11 @@ const Home = () => {
     fetchHomeData();
   }, []);
 
-  if (loading) return <div>Đang tải dữ liệu...</div>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
+    </div>
+  );
 
   const bannerSettings = {
     dots: true, infinite: true, speed: 800, slidesToShow: 1, slidesToScroll: 1, autoplay: true, autoplaySpeed: 4000, arrows: false, fade: true
@@ -112,6 +117,10 @@ const Home = () => {
       { breakpoint: 768, settings: { slidesToShow: 1 } }
     ]
   };
+
+  // Lọc sản phẩm có giảm giá cho Flash Sale, nếu DB chưa có thì mượn tạm 5 sản phẩm đầu
+  const flashSaleProducts = products.filter(p => p.discountPrice && p.discountPrice < p.price);
+  const displayFlashSale = flashSaleProducts.length > 0 ? flashSaleProducts : products.slice(0, 5);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px]">
@@ -206,13 +215,8 @@ const Home = () => {
 
           <div className="flash-sale-slider px-2">
             <Slider {...flashSaleSettings}>
-              {mockProducts.filter(p => p.discountPrice).map((product) => (
+              {displayFlashSale.map((product) => (
                 <div key={product._id} className="p-2 h-full">
-                  <ProductCard product={product} />
-                </div>
-              ))}
-              {mockProducts.map((product) => (
-                <div key={product._id + '_dup'} className="p-2 h-full">
                   <ProductCard product={product} />
                 </div>
               ))}
@@ -228,7 +232,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* SẢN PHẨM BÁN CHẠY */}
+      {/* SẢN PHẨM BÁN CHẠY (Hiện 5 sản phẩm mới nhất từ CSDL) */}
       <section className="py-14 bg-white border-b border-gray-100 relative">
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex items-center justify-center gap-3 mb-10 relative">
@@ -238,7 +242,7 @@ const Home = () => {
             <TrendingUp size={32} className="text-[#e30019] relative z-10" />
             <h2 className="text-3xl font-black text-gray-900 uppercase relative z-10">Sản phẩm bán chạy</h2>
           </div>
-          <div className="grid grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {products.slice(0, 5).map(product => (
                 <ProductCard key={product._id} product={product} />
             ))}
@@ -246,13 +250,11 @@ const Home = () => {
         </div>
       </section>
 
-      {/* DANH MỤC SẢN PHẨM */}
-      <CategorySection title="Laptop Cao Cấp" slug="laptop" products={mockProducts} />
-      <CategorySection title="PC Gaming" slug="pc-gaming" products={mockProducts} />
-      <CategorySection title="PC Đồ họa" slug="pc-do-hoa" products={mockProducts} />
-      <CategorySection title="PC Văn phòng" slug="pc-van-phong" products={mockProducts} />
-      <CategorySection title="PC AI - Trí tuệ nhân tạo" slug="pc-ai" products={mockProducts} />
-      <CategorySection title="Màn hình máy tính" slug="man-hinh" products={mockProducts} />
+      {/* DANH MỤC SẢN PHẨM TRUYỀN DATA THẬT */}
+      <CategorySection title="Laptop Cao Cấp" slug="laptop" products={products} />
+      <CategorySection title="PC Gaming" slug="pc-gaming" products={products} />
+      <CategorySection title="PC Đồ họa" slug="pc-do-hoa" products={products} />
+      <CategorySection title="Màn hình máy tính" slug="man-hinh" products={products} />
 
       {/* TIN TỨC */}
       <section className="py-16 bg-[#f8fafc] border-t border-gray-200">

@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { ShoppingCart, CheckCircle2, Heart } from 'lucide-react';
 import { toast } from 'react-toastify';
-
 import { AppContext } from '../context/AppContext';
+import { IMAGE_URL } from '../utils/axiosClient'; // Đã import chính xác
 
 const ProductCard = ({ product }) => {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -15,15 +15,20 @@ const ProductCard = ({ product }) => {
   
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // Xử lý bảo vệ component: Nếu không có product thì không render gì cả
+  // Bảo vệ component
   if (!product) return null;
 
-  // XỬ LÝ LOGIC GIÁ BÁN THÔNG MINH (Khớp với BE và Mock Data)
-  // 1. Lấy giá bán hiện tại (Ưu tiên discountPrice nếu có, không thì lấy price)
+  // HÀM XỬ LÝ ẢNH THÔNG MINH
+  // Nếu BE trả về link web (http) thì dùng luôn. Nếu trả về tên file (VD: 123.jpg) thì tự động nối IMAGE_URL
+  const getImageUrl = (img) => {
+    if (!img) return 'https://via.placeholder.com/200?text=No+Image';
+    if (img.startsWith('http')) return img;
+    return `${IMAGE_URL}${img}`;
+  };
+
+  // XỬ LÝ LOGIC GIÁ BÁN
   const salePrice = product.discountPrice || product.price; 
-  // 2. Lấy giá gốc bị gạch ngang (Nếu mock data có discountPrice thì price là giá gốc. Nếu BE dùng oldPrice thì lấy oldPrice)
   const originalPrice = product.discountPrice ? product.price : product.oldPrice; 
-  // 3. Tính phần trăm giảm giá tự động
   const discountPercent = (originalPrice && salePrice < originalPrice)
     ? Math.round(((originalPrice - salePrice) / originalPrice) * 100)
     : 0;
@@ -45,17 +50,14 @@ const ProductCard = ({ product }) => {
     e.preventDefault(); 
     e.stopPropagation(); 
     
-    // NẾU CHƯA ĐĂNG NHẬP -> CHẶN
     if (!user) {
       toast.warning("Vui lòng đăng nhập để thêm vào Yêu thích!");
       navigate('/login');
       return; 
     }
-
     setIsFavorite(!isFavorite);
   };
 
-  // Mảng thứ tự ưu tiên hiển thị cấu hình (Để in ra đẹp mắt theo thứ tự CPU -> VGA -> RAM...)
   const specKeysOrder = ['cpu', 'main', 'ram', 'vga', 'storage', 'psu', 'case', 'cooling', 'monitor'];
 
   return (
@@ -69,16 +71,11 @@ const ProductCard = ({ product }) => {
         onMouseLeave={() => setShowTooltip(false)}
       >
         <Link to={`/product/${product.slug || product._id}`} className="block">
-          {product.image ? (
-            <img
-              src={product.image}
-              alt={product.name || 'Sản phẩm'}
-              className="w-full aspect-square object-cover transform hover:scale-105 transition-transform duration-500"
-            />
-          ) : (
-             // Nếu mất ảnh từ API, tự động hiện 1 khối xám mờ thay vì vỡ layout
-            <div className="w-full aspect-square bg-gray-100 flex items-center justify-center text-gray-400 text-xs">Chưa có ảnh</div>
-          )}
+          <img
+            src={getImageUrl(product.image)}
+            alt={product.name || 'Sản phẩm'}
+            className="w-full aspect-square object-cover transform hover:scale-105 transition-transform duration-500"
+          />
         </Link>
 
         {/* NÚT YÊU THÍCH */}
@@ -91,20 +88,18 @@ const ProductCard = ({ product }) => {
         </button>
       </div>
 
-      {/* TOOLTIP HIỂN THỊ THÔNG SỐ (Dùng Portal) */}
+      {/* TOOLTIP HIỂN THỊ THÔNG SỐ */}
       {showTooltip && createPortal(
         <div 
           ref={tooltipRef}
           className="fixed w-[340px] bg-white shadow-[0_0_20px_rgba(0,0,0,0.3)] rounded-lg pointer-events-none"
           style={{ left: `${mousePos.x}px`, top: `${mousePos.y}px`, zIndex: 99999 }}
         >
-          {/* Header Đỏ - Chỉ hiện khi có tên */}
           <div className="bg-[#ff4d4f] text-white font-black p-3 rounded-t-lg text-[15px] leading-snug uppercase">
             {product.name}
           </div>
           
           <div className="p-4 text-[13px]">
-            {/* Giá bán trong Tooltip */}
             <div className="flex mb-4 items-center">
               <span className="font-extrabold w-20 text-gray-900">Giá bán:</span>
               <span className="text-[#ff4d4f] font-black text-[18px]">
@@ -116,12 +111,11 @@ const ProductCard = ({ product }) => {
               Mô tả tóm tắt:
             </div>
             
-            {/* Duyệt mảng specs để in ra cấu hình động, không có thì bỏ qua */}
             {product.specs ? (
               <ul className="text-gray-800 space-y-2 font-medium">
                 {specKeysOrder.map(key => {
                   const specValue = product.specs[key];
-                  if (!specValue) return null; // Nếu không có linh kiện này -> Bỏ qua không in dòng này
+                  if (!specValue) return null; 
                   return (
                     <li key={key} className="flex gap-2 items-start">
                       <CheckCircle2 size={16} className="text-teal-800 shrink-0 mt-0.5"/> 
@@ -141,6 +135,11 @@ const ProductCard = ({ product }) => {
       {/* THÔNG TIN SẢN PHẨM Ở DƯỚI ẢNH */}
       <div className="flex flex-col flex-grow">
         
+        {/* Lấy tên Danh mục thật từ object category do BE trả về */}
+        <div className="text-[11px] text-cyan-600 font-bold mb-1.5 uppercase tracking-wider">
+          {product.category?.name || "Sản phẩm công nghệ"}
+        </div>
+
         <Link to={`/product/${product.slug || product._id}`} className="block mb-2">
           <h3 className="text-[16px] md:text-[17px] font-black text-gray-800 leading-snug uppercase line-clamp-2 min-h-[48px] hover:text-cyan-600 transition-colors">
             {product.name}
@@ -162,7 +161,6 @@ const ProductCard = ({ product }) => {
               </div>
             </div>
 
-            {/* Badge Giảm giá (Chỉ hiện khi tính ra % > 0) */}
             {discountPercent > 0 && (
               <div className="bg-[#e30019] text-white text-[13px] font-bold px-2 py-1 rounded">
                 -{discountPercent}%
@@ -178,14 +176,11 @@ const ProductCard = ({ product }) => {
               e.preventDefault();
               e.stopPropagation();
 
-              // NẾU CHƯA ĐĂNG NHẬP -> CHẶN
               if (!user) {
                 toast.warning("Bạn cần đăng nhập để mua hàng!");
                 navigate('/login');
                 return; 
               }
-
-              // Nếu đã đăng nhập -> cho phép thêm giỏ hàng
               addToCart(product); 
             }}
             disabled={product.stockQuantity === 0} 
