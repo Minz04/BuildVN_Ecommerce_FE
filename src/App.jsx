@@ -11,6 +11,7 @@ import { AppProvider } from './context/AppContext';
 import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
+import ProductDetail from './pages/ProductDetail';
 import BuildPC from "./pages/BuildPC";
 import Contact from "./pages/Contact";
 import Cart from "./pages/Cart";
@@ -26,7 +27,8 @@ const App = () => {
         <Routes>
           <Route element={<MainLayout />}>
             <Route path='/' element={<Home />} />
-            <Route path='/products' element={<Products />} />  
+            <Route path='/products' element={<Products />} /> 
+            <Route path='/product/:slug' element={<ProductDetail />} />
             <Route path='/buildpc' element={<BuildPC />} />  
             <Route path='/contact' element={<Contact />} />  
 

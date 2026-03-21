@@ -18,12 +18,22 @@ const ProductCard = ({ product }) => {
   // Bảo vệ component
   if (!product) return null;
 
-  // HÀM XỬ LÝ ẢNH THÔNG MINH
-  // Nếu BE trả về link web (http) thì dùng luôn. Nếu trả về tên file (VD: 123.jpg) thì tự động nối IMAGE_URL
+  // HÀM XỬ LÝ ẢNH 
   const getImageUrl = (img) => {
+    // 1. Nếu không có ảnh -> Trả về ảnh mặc định
     if (!img) return 'https://via.placeholder.com/200?text=No+Image';
+    
+    // 2. Nếu là link web ngoài (VD: https://nguyencongpc.vn/...) -> Giữ nguyên
     if (img.startsWith('http')) return img;
-    return `${IMAGE_URL}${img}`;
+
+    const BASE_URL = 'http://localhost:3000'; 
+    if (img.startsWith('/images/')) {
+       return `${BASE_URL}${img}`;
+    }
+    if (img.startsWith('/')) {
+       return `${BASE_URL}/images${img}`;
+    }
+    return `${BASE_URL}/images/${img}`;
   };
 
   // XỬ LÝ LOGIC GIÁ BÁN

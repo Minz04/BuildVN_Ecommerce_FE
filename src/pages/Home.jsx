@@ -3,20 +3,18 @@ import { Link } from 'react-router-dom';
 import Slider from 'react-slick';
 import { Timer, ChevronRight, Zap, TrendingUp, Newspaper, Sparkles } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
-import { mockBanners, mockNews } from '../mock/homeMockData'; // Đã gỡ bỏ mockProducts vì dùng data thật
+
+// Chỉ import mockNews cho phần tin tức ở cuối trang, ĐÃ XÓA mockBanners
+import { mockNews } from '../mock/homeMockData'; 
 import { productApi } from '../services/productApi';
 
-// COMPONENT DANH MỤC (Đã cập nhật logic lọc theo DB thật)
+// COMPONENT DANH MỤC 
 const CategorySection = ({ title, slug, products }) => {
-  // DB trả về product.category là 1 object { _id, name, slug... } nhờ lệnh populate
-  const filteredProducts = products.filter(p => p.category?.slug === slug || p.categorySlug === slug);
-  const displayProducts = filteredProducts.length > 0 ? filteredProducts : products.slice(0, 5);
+  const displayProducts = products.slice(0, 5);
 
   return (
     <section className="py-10 border-b border-gray-100 relative bg-white hover:bg-gray-50/50 transition-colors duration-500">
       <div className="container mx-auto px-4 relative z-10">
-        
-        {/* Header Danh mục - Hiệu ứng Gradient Text & Line */}
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-black uppercase flex items-center gap-3">
             <span className="w-1.5 h-8 bg-gradient-to-b from-cyan-400 to-blue-600 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.5)]"></span>
@@ -42,19 +40,19 @@ const CategorySection = ({ title, slug, products }) => {
 
 // TRANG CHỦ MAIN 
 const Home = () => {
-  // Chứa dữ liệu thật từ Backend
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // STATE CHỨA DATA BANNER TỪ BACKEND
+  const [mainBanners, setMainBanners] = useState([]);
+  const [subBanners, setSubBanners] = useState([]);
 
-  // LOGIC ĐẾM NGƯỢC THEO KHUNG 3 TIẾNG 
   const calculateTimeLeft = () => {
     const now = new Date();
     const nextSlot = new Date(now);
-    
-    // Lấy giờ hiện tại và tìm mốc 3 tiếng tiếp theo
     const currentHour = now.getHours();
     const hoursToAdd = 3 - (currentHour % 3); 
-    
     nextSlot.setHours(currentHour + hoursToAdd, 0, 0, 0); 
     const difference = nextSlot - now;
 
@@ -71,26 +69,52 @@ const Home = () => {
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 1000);
+    const timer = setInterval(() => setTimeLeft(calculateTimeLeft()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // GỌI API LẤY DỮ LIỆU THẬT
+  // GỌI API LẤY DỮ LIỆU SẢN PHẨM, DANH MỤC VÀ BANNER
   useEffect(() => {
     const fetchHomeData = async () => {
+      // 1. Lấy Sản phẩm và Danh mục
       try {
-        const productRes = await productApi.getAllProducts();
-        setProducts(productRes.data); // Đổ data BE vào State
+        const [productRes, categoryRes] = await Promise.all([
+          productApi.getAllProducts(), 
+          productApi.getCategories()
+        ]);
+        setProducts(productRes.data);
+        setCategories(categoryRes.data); 
       } catch (error) {
-        console.error("Lỗi lấy dữ liệu trang chủ", error);
+        console.error("Lỗi lấy dữ liệu Sản phẩm/Danh mục:", error);
+      }
+
+      // 2. Lấy Banner từ Backend
+      try {
+        const bannerRes = await productApi.getBanners();
+        if (bannerRes.data && bannerRes.data.length > 0) {
+           setMainBanners(bannerRes.data.filter(b => b.type === 'main'));
+           setSubBanners(bannerRes.data.filter(b => b.type === 'sub'));
+        }
+      } catch (error) {
+        console.error("🚨 Lỗi khi gọi API Banner:", error);
       } finally {
         setLoading(false);
       }
     };
+    
     fetchHomeData();
   }, []);
+
+  // HÀM TẠO LINK ẢNH TRỰC TIẾP TỪ BACKEND (Lưu ý Port 3000)
+  const getImageUrl = (img) => {
+    if (!img) return '';
+    if (img.startsWith('http')) return img;
+    
+    const BASE_URL = 'http://localhost:3000';
+    if (img.startsWith('/images/')) return `${BASE_URL}${img}`;
+    if (img.startsWith('/')) return `${BASE_URL}/images${img}`;
+    return `${BASE_URL}/images/${img}`;
+  };
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -118,48 +142,55 @@ const Home = () => {
     ]
   };
 
-  // Lọc sản phẩm có giảm giá cho Flash Sale, nếu DB chưa có thì mượn tạm 5 sản phẩm đầu
-  const flashSaleProducts = products.filter(p => p.discountPrice && p.discountPrice < p.price);
+  const flashSaleProducts = products.filter(p => p.oldPrice && p.oldPrice > p.price);
   const displayFlashSale = flashSaleProducts.length > 0 ? flashSaleProducts : products.slice(0, 5);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px]">
       
-      {/* BANNERS */}
+      {/* KHU VỰC BANNERS - ĐÃ CHUYỂN SANG DÙNG DATA TỪ BACKEND */}
       <section className="pb-8 pt-6">
         <div className="container mx-auto px-4">
-          {/* Banner chính với hiệu ứng Shadow xịn xò */}
-          <div className="rounded-2xl overflow-hidden shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15)] mb-6 leading-none border border-gray-100">
-            <Slider {...bannerSettings}>
-              {mockBanners.main.map((imgUrl, index) => (
-                <div key={index} className="outline-none relative group">
-                  <Link to="/products" className="block w-full">
-                    <img src={imgUrl} alt={`Banner ${index + 1}`} className="w-full block m-0 aspect-[2400/866] object-cover transition-transform duration-700 group-hover:scale-105"/>
-                    <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-500"></div>
-                  </Link>
-                </div>
-              ))}
-            </Slider>
-          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link to="/products" className="overflow-hidden rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 block border border-gray-100">
-              <img src={mockBanners.sub1} alt="Sub Banner 1" className="w-full block aspect-[1200/675] object-cover" />
-            </Link>
-            <Link to="/products" className="overflow-hidden rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 block border border-gray-100">
-              <img src={mockBanners.sub2} alt="Sub Banner 2" className="w-full block aspect-[1200/675] object-cover" />
-            </Link>
-            <Link to="/products" className="overflow-hidden rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 block border border-gray-100">
-              <img src={mockBanners.sub3 || mockBanners.sub1} alt="Sub Banner 3" className="w-full block aspect-[1200/675] object-cover" />
-            </Link>
-          </div>
+          {/* BANNER CHÍNH (MAIN) */}
+          {mainBanners.length > 0 && (
+            <div className="rounded-2xl overflow-hidden shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15)] mb-6 leading-none border border-gray-100">
+              <Slider {...bannerSettings}>
+                {mainBanners.map((banner) => (
+                  <div key={banner._id} className="outline-none relative group">
+                    <Link to={banner.link || "/products"} className="block w-full">
+                      <img 
+                        src={getImageUrl(banner.image)} 
+                        alt="Main Banner" 
+                        className="w-full block m-0 aspect-[2400/866] object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors duration-500"></div>
+                    </Link>
+                  </div>
+                ))}
+              </Slider>
+            </div>
+          )}
+          
+          {/* BANNER PHỤ (SUB) */}
+          {subBanners.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {subBanners.slice(0, 3).map((banner) => (
+                <Link key={banner._id} to={banner.link || "/products"} className="overflow-hidden rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 block border border-gray-100">
+                  <img 
+                    src={getImageUrl(banner.image)} 
+                    alt="Sub Banner" 
+                    className="w-full block aspect-[1200/675] object-cover" 
+                  />
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       {/* FLASH SALE   */}
       <section className="py-14 relative overflow-hidden bg-gradient-to-r from-[#00c6ff] via-[#0072ff] to-[#bd00ff]">
-        
-        {/* HIỆU ỨNG TRANG TRÍ MỜ BÊN DƯỚI NỀN (Css Blur cực nhẹ) */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
            <div className="absolute -top-20 -left-20 w-80 h-80 bg-white opacity-20 rounded-full blur-[80px]"></div>
            <div className="absolute top-20 -right-20 w-96 h-96 bg-cyan-300 opacity-20 rounded-full blur-[100px]"></div>
@@ -168,48 +199,36 @@ const Home = () => {
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
             <div className="flex items-center gap-4">
-              {/* Icon sét phát sáng */}
               <div className="relative">
                 <Zap size={38} className="text-yellow-300 fill-yellow-300 animate-pulse relative z-10" />
                 <div className="absolute inset-0 bg-yellow-400 blur-md opacity-50"></div>
               </div>
-              
               <h2 className="text-4xl font-extrabold italic uppercase text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] tracking-wider">
                 Flash Sale
               </h2>
               
-              {/* BỘ ĐẾM GIỜ */}
               <div className="flex items-center gap-3 text-xl font-black ml-4">
-                {/* Giờ */}
                 <div className="flex flex-col items-center">
                   <span className="bg-white text-gray-900 shadow-[0_4px_10px_rgba(0,0,0,0.2)] border-b-4 border-gray-300 w-12 h-12 flex items-center justify-center rounded-lg text-2xl">
                     {String(timeLeft.hours).padStart(2, '0')}
                   </span>
                   <span className="text-[10px] uppercase font-bold mt-1 text-white/80 tracking-wider">Giờ</span>
                 </div>
-                
                 <span className="text-white text-2xl pb-4 animate-pulse">:</span>
-
-                {/* Phút */}
                 <div className="flex flex-col items-center">
                   <span className="bg-white text-gray-900 shadow-[0_4px_10px_rgba(0,0,0,0.2)] border-b-4 border-gray-300 w-12 h-12 flex items-center justify-center rounded-lg text-2xl">
                     {String(timeLeft.minutes).padStart(2, '0')}
                   </span>
                   <span className="text-[10px] uppercase font-bold mt-1 text-white/80 tracking-wider">Phút</span>
                 </div>
-
                 <span className="text-white text-2xl pb-4 animate-pulse">:</span>
-
-                {/* Giây */}
                 <div className="flex flex-col items-center">
                   <span className={`${timeLeft.hours === 0 ? 'bg-[#ff4d4f] text-white border-[#cf1322]' : 'bg-white text-gray-900 border-gray-300'} shadow-[0_4px_10px_rgba(0,0,0,0.2)] border-b-4 w-12 h-12 flex items-center justify-center rounded-lg text-2xl transition-colors duration-300`}>
                     {String(timeLeft.seconds).padStart(2, '0')}
                   </span>
                   <span className="text-[10px] uppercase font-bold mt-1 text-white/80 tracking-wider">Giây</span>
                 </div>
-                
               </div>
-
             </div>
           </div>
 
@@ -232,13 +251,11 @@ const Home = () => {
         </div>
       </section>
 
-      {/* SẢN PHẨM BÁN CHẠY (Hiện 5 sản phẩm mới nhất từ CSDL) */}
+      {/* SẢN PHẨM BÁN CHẠY */}
       <section className="py-14 bg-white border-b border-gray-100 relative">
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex items-center justify-center gap-3 mb-10 relative">
-            {/* Hiệu ứng nền chìm đằng sau Title */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-16 bg-red-100 blur-2xl opacity-60 rounded-full"></div>
-            
             <TrendingUp size={32} className="text-[#e30019] relative z-10" />
             <h2 className="text-3xl font-black text-gray-900 uppercase relative z-10">Sản phẩm bán chạy</h2>
           </div>
@@ -250,11 +267,24 @@ const Home = () => {
         </div>
       </section>
 
-      {/* DANH MỤC SẢN PHẨM TRUYỀN DATA THẬT */}
-      <CategorySection title="Laptop Cao Cấp" slug="laptop" products={products} />
-      <CategorySection title="PC Gaming" slug="pc-gaming" products={products} />
-      <CategorySection title="PC Đồ họa" slug="pc-do-hoa" products={products} />
-      <CategorySection title="Màn hình máy tính" slug="man-hinh" products={products} />
+      {/* DANH MỤC TỰ ĐỘNG */}
+      {categories.map(category => {
+        const productsInCategory = products.filter(p => {
+            if (!p.category) return false;
+            return p.category._id === category._id || p.category === category._id;
+        });
+
+        if (productsInCategory.length === 0) return null;
+        
+        return (
+          <CategorySection 
+            key={category._id} 
+            title={category.name} 
+            slug={category.slug}  
+            products={productsInCategory} 
+          />
+        );
+      })}
 
       {/* TIN TỨC */}
       <section className="py-16 bg-[#f8fafc] border-t border-gray-200">
