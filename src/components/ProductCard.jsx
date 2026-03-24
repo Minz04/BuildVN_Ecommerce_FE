@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { ShoppingCart, CheckCircle2, Heart } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { AppContext } from '../context/AppContext';
-import { IMAGE_URL } from '../utils/axiosClient'; // Đã import chính xác
+import { IMAGE_URL } from '../utils/axiosClient';
 
 const ProductCard = ({ product }) => {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -15,15 +15,10 @@ const ProductCard = ({ product }) => {
   
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // Bảo vệ component
   if (!product) return null;
 
-  // HÀM XỬ LÝ ẢNH 
   const getImageUrl = (img) => {
-    // 1. Nếu không có ảnh -> Trả về ảnh mặc định
     if (!img) return 'https://via.placeholder.com/200?text=No+Image';
-    
-    // 2. Nếu là link web ngoài (VD: https://nguyencongpc.vn/...) -> Giữ nguyên
     if (img.startsWith('http')) return img;
 
     const BASE_URL = 'http://localhost:3000'; 
@@ -36,14 +31,12 @@ const ProductCard = ({ product }) => {
     return `${BASE_URL}/images/${img}`;
   };
 
-  // XỬ LÝ LOGIC GIÁ BÁN
   const salePrice = product.discountPrice || product.price; 
   const originalPrice = product.discountPrice ? product.price : product.oldPrice; 
   const discountPercent = (originalPrice && salePrice < originalPrice)
     ? Math.round(((originalPrice - salePrice) / originalPrice) * 100)
     : 0;
 
-  // Xử lý tooltip đi theo chuột
   const handleMouseMove = (e) => {
     let x = e.clientX + 15;
     let y = e.clientY + 15;
@@ -145,7 +138,6 @@ const ProductCard = ({ product }) => {
       {/* THÔNG TIN SẢN PHẨM Ở DƯỚI ẢNH */}
       <div className="flex flex-col flex-grow">
         
-        {/* Lấy tên Danh mục thật từ object category do BE trả về */}
         <div className="text-[11px] text-cyan-600 font-bold mb-1.5 uppercase tracking-wider">
           {product.category?.name || "Sản phẩm công nghệ"}
         </div>
@@ -157,7 +149,7 @@ const ProductCard = ({ product }) => {
         </Link>
 
         {/* Khối chứa Giá */}
-        <div className="mt-auto border-b border-gray-100 pb-3 mb-3">
+        <div className="border-b border-gray-100 pb-3 mb-3">
           <div className="flex justify-between items-start">
             <div>
               <div className="text-[#e30019] font-black text-[22px] leading-none mb-1">
@@ -179,8 +171,8 @@ const ProductCard = ({ product }) => {
           </div>
         </div>
 
-        {/* Nút Giỏ hàng và Trạng thái */}
-        <div className="flex items-center justify-between mt-auto">
+        {/* KHU VỰC NÚT BẤM ĐÃ FIX LỖI RỚT DÒNG */}
+        <div className="flex items-center justify-between mt-auto gap-1 md:gap-2">
           <button 
             onClick={(e) => { 
               e.preventDefault();
@@ -194,25 +186,29 @@ const ProductCard = ({ product }) => {
               addToCart(product); 
             }}
             disabled={product.stockQuantity === 0} 
-            className={`flex items-center gap-2 font-black text-[14px] group/btn 
-              ${product.stockQuantity === 0 ? 'text-red-400 cursor-not-allowed' : 'text-[#203481]'}`}
+            className={`flex items-center gap-1.5 md:gap-2 font-black text-[12px] group/btn flex-1 overflow-hidden
+              ${product.stockQuantity === 0 ? 'text-red-400 cursor-not-allowed opacity-70' : 'text-[#203481]'}`}
           >
-            <div className={`text-white p-1.5 rounded-full transition-all duration-300
-              ${product.stockQuantity === 0 ? 'bg-red-300' : 'bg-[#203481] group-hover/btn:bg-blue-600 group-hover/btn:scale-110'}`}
+            <div className={`text-white p-1.5 md:p-2 rounded-full transition-all duration-300 shrink-0 shadow-sm
+              ${product.stockQuantity === 0 ? 'bg-red-400' : 'bg-[#203481] group-hover/btn:bg-blue-600 group-hover/btn:scale-110'}`}
             >
-              <ShoppingCart size={18} />
+              <ShoppingCart size={16} />
             </div>
-            <span className={`${product.stockQuantity === 0 ? '' : 'group-hover/btn:text-blue-600'} transition-colors uppercase hidden sm:block`}>
+            
+            {/* Class whitespace-nowrap cấm tuyệt đối việc rớt dòng */}
+            <span className={`transition-colors uppercase whitespace-nowrap tracking-tight 
+              ${product.stockQuantity === 0 ? '' : 'group-hover/btn:text-blue-600'}`}>
               {product.stockQuantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ'}
             </span>
           </button>
           
+          {/* Trạng thái kho */}
           {product.stockQuantity === 0 ? (
-            <span className="bg-red-100 text-red-500 border border-gray-200 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap">
+            <span className="bg-red-100 text-red-600 border border-gray-100 px-2 py-1.5 rounded-md text-[10px] md:text-xs font-bold whitespace-nowrap shrink-0">
               Tạm hết
             </span>
           ) : (
-            <span className="bg-[#dcfce7] text-[#15803d] px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap">
+            <span className="bg-[#dcfce7] text-[#15803d] px-2 py-1.5 rounded-md text-[10px] md:text-xs font-bold whitespace-nowrap shrink-0">
               Còn hàng
             </span>
           )}

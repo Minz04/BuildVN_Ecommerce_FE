@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Slider from 'react-slick';
 import { Timer, ChevronRight, Zap, TrendingUp, Newspaper, Sparkles } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 // Chỉ import mockNews cho phần tin tức ở cuối trang, ĐÃ XÓA mockBanners
 import { mockNews } from '../mock/homeMockData'; 
@@ -116,11 +117,7 @@ const Home = () => {
     return `${BASE_URL}/images/${img}`;
   };
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
-    </div>
-  );
+  if (loading) return <LoadingSpinner />;
 
   const bannerSettings = {
     dots: true, infinite: true, speed: 800, slidesToShow: 1, slidesToScroll: 1, autoplay: true, autoplaySpeed: 4000, arrows: false, fade: true

@@ -148,13 +148,12 @@ const Navbar = () => {
             </div>
           </div>
 
-          <Link to="/buildpc" className="flex items-center gap-3 group">
+          <Link to="/wishlist" className="flex items-center gap-3 group">
             <div className="p-2.5 bg-gray-100 group-hover:bg-cyan-50 text-gray-500 group-hover:text-cyan-600 rounded-full transition-colors duration-300">
               <Monitor size={20} />
             </div>
             <div className="text-[14px] hidden lg:block">
-              <p className="text-gray-500 font-medium leading-tight group-hover:text-cyan-600 transition-colors">Xây dựng</p>
-              <p className="font-black text-gray-800 group-hover:text-cyan-600 transition-colors">Cấu hình PC</p>
+              <p className="font-black text-gray-800 group-hover:text-cyan-600 transition-colors">Yêu thích</p>
             </div>
           </Link>
 

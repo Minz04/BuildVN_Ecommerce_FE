@@ -17,33 +17,28 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
 
-  // 1. Hàm Thêm vào giỏ
-  const addToCart = (product) => {
-    // ĐƯA TOAST RA NGOÀI: Kiểm tra trước xem sản phẩm đã có chưa để gọi Toast 1 lần duy nhất
-    const existingItem = cart.find(item => item._id === product._id);
-    if (existingItem) {
-      toast.info(`Đã tăng số lượng ${product.name} trong giỏ!`);
-    } else {
-      toast.success(`Đã thêm ${product.name} vào giỏ hàng!`);
-    }
-
-    // SAU ĐÓ MỚI CẬP NHẬT STATE
+  // 1. Hàm Thêm vào giỏ hàng
+  const addToCart = (product, quantityToAdd = 1) => { 
     setCart((prevCart) => {
-      const itemExists = prevCart.find(item => item._id === product._id);
-      if (itemExists) {
+      const existingItem = prevCart.find(item => item._id === product._id);
+      
+      if (existingItem) {
+        const newQuantity = existingItem.quantity + quantityToAdd;
+        
+        if (newQuantity > product.stockQuantity) {
+          toast.warning(`Chỉ còn ${product.stockQuantity} sản phẩm trong kho!`);
+          return prevCart;
+        }
+        
+        toast.success(`Đã cập nhật thêm ${quantityToAdd} sản phẩm vào giỏ`);
         return prevCart.map(item => 
-          item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+          item._id === product._id ? { ...item, quantity: newQuantity } : item
         );
       } else {
-        return [...prevCart, { ...product, quantity: 1 }];
+        toast.success(`Đã thêm vào giỏ: ${product.name}`);
+        return [...prevCart, { ...product, quantity: quantityToAdd }];
       }
     });
-
-    return (
-      <AppContext.Provider value={{ cart, addToCart, updateQuantity, removeFromCart, getCartTotal, user, setUser }}>
-        {children}
-      </AppContext.Provider>
-    );
   };
 
   // 2. Hàm Tăng/Giảm số lượng
