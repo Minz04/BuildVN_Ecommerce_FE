@@ -1,0 +1,347 @@
+import React, { useState, useContext, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { ChevronLeft, ShoppingBag, MapPin, CreditCard, CheckCircle, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
+import axios from 'axios';
+import { AppContext } from '../context/AppContext';
+import { orderApi } from '../services/orderApi';
+
+const Checkout = () => {
+  const { cart, user, setCart } = useContext(AppContext);
+  const navigate = useNavigate();
+
+  // ==========================================
+  // BẢO VỆ ROUTE
+  // ==========================================
+  useEffect(() => {
+    if (!user) navigate('/login');
+    if (cart.length === 0) navigate('/cart');
+  }, [user, cart, navigate]);
+
+  // ==========================================
+  // STATE ĐIỀU HƯỚNG & XỬ LÝ
+  // ==========================================
+  const [step, setStep] = useState(1); // 1: Thông tin, 2: Thanh toán
+  const [isLoading, setIsLoading] = useState(false);
+
+  // ==========================================
+  // STATE FORM & API ĐỊA CHỈ VIỆT NAM
+  // ==========================================
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+
+  const [formData, setFormData] = useState({
+    gender: 'anh',
+    fullname: user?.fullname || user?.email || '',
+    phone: user?.phone || '',
+    province: '',
+    provinceName: '',
+    district: '',
+    districtName: '',
+    ward: '',
+    wardName: '',
+    street: '',
+    note: ''
+  });
+
+  const [paymentMethod, setPaymentMethod] = useState('COD');
+
+  // TÍNH TỔNG TIỀN
+  const totalPrice = cart.reduce((total, item) => {
+    if (!item.computer) return total;
+    return total + (item.computer.price * item.quantity);
+  }, 0);
+
+  // LẤY DỮ LIỆU TỈNH THÀNH KHI LOAD TRANG
+  useEffect(() => {
+    axios.get('https://provinces.open-api.vn/api/?depth=3')
+      .then(res => setProvinces(res.data))
+      .catch(err => console.error("Lỗi tải API Địa chỉ:", err));
+  }, []);
+
+  // XỬ LÝ KHI CHỌN TỈNH -> TẢI HUYỆN
+  const handleProvinceChange = (e) => {
+    const provinceCode = e.target.value;
+    const selectedProv = provinces.find(p => p.code == provinceCode);
+    
+    setDistricts(selectedProv ? selectedProv.districts : []);
+    setWards([]);
+    setFormData({
+      ...formData,
+      province: provinceCode,
+      provinceName: selectedProv ? selectedProv.name : '',
+      district: '', districtName: '',
+      ward: '', wardName: ''
+    });
+  };
+
+  // XỬ LÝ KHI CHỌN HUYỆN -> TẢI XÃ
+  const handleDistrictChange = (e) => {
+    const districtCode = e.target.value;
+    const selectedDist = districts.find(d => d.code == districtCode);
+    
+    setWards(selectedDist ? selectedDist.wards : []);
+    setFormData({
+      ...formData,
+      district: districtCode,
+      districtName: selectedDist ? selectedDist.name : '',
+      ward: '', wardName: ''
+    });
+  };
+
+  // XỬ LÝ KHI CHỌN XÃ
+  const handleWardChange = (e) => {
+    const wardCode = e.target.value;
+    const selectedWard = wards.find(w => w.code == wardCode);
+    setFormData({
+      ...formData,
+      ward: wardCode,
+      wardName: selectedWard ? selectedWard.name : ''
+    });
+  };
+
+  // ==========================================
+  // HÀM CHUYỂN BƯỚC 1 -> BƯỚC 2
+  // ==========================================
+  const handleNextStep = (e) => {
+    e.preventDefault();
+    
+    if (!formData.fullname || !formData.phone || !formData.province || !formData.district || !formData.ward || !formData.street) {
+      toast.warning("Vui lòng điền đầy đủ thông tin giao hàng!");
+      return;
+    }
+    
+    // Regex chuẩn 100% cho số điện thoại di động Việt Nam (10 số)
+    const phoneRegex = /^(0[3|5|7|8|9])[0-9]{8}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      toast.error("Số điện thoại không hợp lệ! Vui lòng nhập số di động 10 số.");
+      return;
+    }
+    
+    setStep(2);
+    window.scrollTo(0, 0);
+  };
+
+  // ==========================================
+  // HÀM SUBMIT CHỐT ĐƠN API (BƯỚC 2)
+  // ==========================================
+  const handleSubmitOrder = async () => {
+    setIsLoading(true);
+    try {
+      // 1. Gộp chuỗi địa chỉ cực kỳ cẩn thận
+      const addressString = `${formData.street}, ${formData.wardName}, ${formData.districtName}, ${formData.provinceName}`;
+      // Nếu khách có nhập ghi chú thì nối vào, không thì thôi
+      const finalAddress = formData.note.trim() ? `${addressString} (Ghi chú: ${formData.note.trim()})` : addressString;
+
+      // 2. GỌI API BACKEND
+      const res = await orderApi.createOrder({
+        shippingAddress: finalAddress,
+        phone: formData.phone
+      });
+
+      const orderId = res.data.orderId;
+      setCart([]); // Xóa giỏ hàng (Bây giờ đã hoạt động 100%)
+
+      // 3. XỬ LÝ VNPAY NẾU CÓ
+      if (paymentMethod === 'VNPAY') {
+        toast.info('Đang chuyển hướng sang VNPAY...');
+        // Đảm bảo trong services/orderApi.js bạn cấu hình đúng link VNPAY của BE
+        const paymentRes = await orderApi.createPaymentUrl(orderId);
+        if (paymentRes.data.paymentUrl) {
+           window.location.href = paymentRes.data.paymentUrl; 
+           return;
+        }
+      }
+
+      // NẾU LÀ COD
+      toast.success('Đặt hàng thành công!');
+      navigate('/'); 
+
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đặt hàng');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Nếu giỏ hàng trống thì không render form
+  if (cart.length === 0) return null;
+
+  return (
+    <div className="bg-[#f4f6f8] min-h-screen pb-12 pt-6">
+      <div className="container mx-auto px-4 max-w-[800px]">
+        
+        {/* Nút quay lại */}
+        <button 
+          onClick={() => step === 1 ? navigate('/cart') : setStep(1)} 
+          className="inline-flex items-center gap-1 text-[#0071e3] hover:text-blue-800 font-medium mb-4 text-sm transition-colors"
+        >
+          <ChevronLeft size={18} /> {step === 1 ? 'Trở về giỏ hàng' : 'Trở về thông tin đặt hàng'}
+        </button>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          
+          {/* HEADER WIZARD */}
+          <div className="bg-[#fff0f1] p-5 md:p-6 border-b border-red-100 relative overflow-hidden">
+            <div className="flex justify-between items-center relative z-10 max-w-[600px] mx-auto">
+              
+              <div className="absolute top-1/2 left-[10%] right-[10%] h-[2px] bg-red-200 -translate-y-1/2 -z-10 border-t border-dashed border-red-300"></div>
+
+              <div className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => navigate('/cart')}>
+                <div className="w-8 h-8 rounded-full bg-[#e30019] text-white flex items-center justify-center font-bold text-sm shadow-sm"><ShoppingBag size={14} /></div>
+                <span className="text-[11px] md:text-xs font-bold text-[#e30019]">Giỏ hàng</span>
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-sm transition-colors ${step >= 1 ? 'bg-[#e30019] text-white' : 'bg-white text-gray-400 border-2 border-gray-200'}`}>
+                  <MapPin size={14} />
+                </div>
+                <span className={`text-[11px] md:text-xs font-bold ${step >= 1 ? 'text-[#e30019]' : 'text-gray-400'}`}>Thông tin đặt hàng</span>
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-sm transition-colors ${step >= 2 ? 'bg-[#e30019] text-white' : 'bg-white text-gray-400 border-2 border-gray-200'}`}>
+                  <CreditCard size={14} />
+                </div>
+                <span className={`text-[11px] md:text-xs font-bold ${step >= 2 ? 'text-[#e30019]' : 'text-gray-400'}`}>Thanh toán</span>
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-white text-gray-400 border-2 border-gray-200 flex items-center justify-center font-bold text-sm"><CheckCircle size={14} /></div>
+                <span className="text-[11px] md:text-xs font-bold text-gray-400">Hoàn tất</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ========================================================= */}
+          {/* CONTENT STEP 1: ĐIỀN THÔNG TIN */}
+          {/* ========================================================= */}
+          {step === 1 && (
+            <form onSubmit={handleNextStep} className="p-5 md:p-8">
+              
+              <h2 className="text-lg font-bold text-gray-800 mb-4">Thông tin khách mua hàng</h2>
+              
+              <div className="flex items-center gap-6 mb-5">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="gender" value="anh" checked={formData.gender === 'anh'} onChange={(e)=>setFormData({...formData, gender: e.target.value})} className="w-4 h-4 text-[#0071e3] accent-[#0071e3]" />
+                  <span className="text-sm font-medium">Anh</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="gender" value="chi" checked={formData.gender === 'chi'} onChange={(e)=>setFormData({...formData, gender: e.target.value})} className="w-4 h-4 text-[#0071e3] accent-[#0071e3]" />
+                  <span className="text-sm font-medium">Chị</span>
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <input 
+                  type="text" placeholder="Nhập họ tên" required
+                  value={formData.fullname} onChange={(e)=>setFormData({...formData, fullname: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] outline-none transition-colors text-sm"
+                />
+                <input 
+                  type="tel" placeholder="Nhập số điện thoại di động" required
+                  value={formData.phone} onChange={(e)=>setFormData({...formData, phone: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] outline-none transition-colors text-sm"
+                />
+              </div>
+
+              <h2 className="text-lg font-bold text-gray-800 mb-4">Chọn cách nhận hàng</h2>
+              <div className="flex items-center gap-2 mb-4">
+                 <input type="radio" checked readOnly className="w-4 h-4 text-[#0071e3] accent-[#0071e3]" />
+                 <span className="text-sm font-medium">Giao hàng tận nơi</span>
+              </div>
+
+              <div className="bg-gray-50 p-4 md:p-5 rounded-xl border border-gray-100 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {/* Tỉnh/Thành phố */}
+                  <select required value={formData.province} onChange={handleProvinceChange} className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3]">
+                    <option value="">Chọn Tỉnh, Thành phố</option>
+                    {provinces.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}
+                  </select>
+
+                  {/* Quận/Huyện */}
+                  <select required value={formData.district} onChange={handleDistrictChange} disabled={!formData.province} className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3] disabled:bg-gray-100 disabled:cursor-not-allowed">
+                    <option value="">Chọn Quận, Huyện</option>
+                    {districts.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}
+                  </select>
+
+                  {/* Phường/Xã */}
+                  <select required value={formData.ward} onChange={handleWardChange} disabled={!formData.district} className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3] disabled:bg-gray-100 disabled:cursor-not-allowed">
+                    <option value="">Chọn Phường, Xã</option>
+                    {wards.map(w => <option key={w.code} value={w.code}>{w.name}</option>)}
+                  </select>
+
+                  {/* Số nhà, tên đường */}
+                  <input type="text" required placeholder="Số nhà, tên đường" value={formData.street} onChange={(e)=>setFormData({...formData, street: e.target.value})} className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3]" />
+                </div>
+
+                <input type="text" placeholder="Lưu ý, yêu cầu khác (Không bắt buộc)" value={formData.note} onChange={(e)=>setFormData({...formData, note: e.target.value})} className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3]" />
+              </div>
+
+              <div className="border-t border-gray-200 mt-6 pt-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
+                <span className="font-bold text-gray-800 text-lg">Tổng tiền:</span>
+                <span className="text-2xl font-black text-[#e30019]">{totalPrice.toLocaleString('vi-VN')}<span className="underline ml-1">đ</span></span>
+              </div>
+
+              <button type="submit" className="w-full bg-[#e30019] hover:bg-red-700 text-white font-black py-4 rounded-lg uppercase tracking-wider transition-colors shadow-lg shadow-red-500/30">
+                TIẾP TỤC ĐẾN THANH TOÁN
+              </button>
+              <p className="text-center text-sm text-gray-500 mt-4">Bạn có thể chọn hình thức thanh toán ở bước sau</p>
+            </form>
+          )}
+
+          {/* ========================================================= */}
+          {/* CONTENT STEP 2: CHỌN PHƯƠNG THỨC THANH TOÁN */}
+          {/* ========================================================= */}
+          {step === 2 && (
+            <div className="p-5 md:p-8">
+              <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <CreditCard className="text-[#0071e3]" /> Chọn phương thức thanh toán
+              </h2>
+
+              <div className="space-y-4 mb-8">
+                {/* Thanh toán COD */}
+                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'COD' ? 'border-[#0071e3] bg-blue-50/50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
+                  <input type="radio" name="payment" value="COD" checked={paymentMethod === 'COD'} onChange={() => setPaymentMethod('COD')} className="w-5 h-5 text-[#0071e3] accent-[#0071e3]" />
+                  <div className="ml-4">
+                    <h4 className="font-bold text-gray-800">Thanh toán khi nhận hàng (COD)</h4>
+                    <p className="text-sm text-gray-500">Khách hàng thanh toán bằng tiền mặt khi shipper giao hàng tới.</p>
+                  </div>
+                </label>
+
+                {/* Thanh toán VNPAY */}
+                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'VNPAY' ? 'border-[#0071e3] bg-blue-50/50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
+                  <input type="radio" name="payment" value="VNPAY" checked={paymentMethod === 'VNPAY'} onChange={() => setPaymentMethod('VNPAY')} className="w-5 h-5 text-[#0071e3] accent-[#0071e3]" />
+                  <div className="ml-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                    <div className="bg-blue-100 w-fit p-1.5 rounded text-blue-800 font-black text-lg px-2 italic">VN<span className="text-red-500">PAY</span></div>
+                    <div>
+                      <h4 className="font-bold text-gray-800">Thanh toán Online qua VNPAY</h4>
+                      <p className="text-sm text-gray-500">Quét mã QR, Thẻ ATM, Internet Banking.</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                <span className="font-bold text-gray-800">Tổng thanh toán:</span>
+                <span className="text-3xl font-black text-[#e30019]">{totalPrice.toLocaleString('vi-VN')}<span className="underline ml-1">đ</span></span>
+              </div>
+
+              <button 
+                onClick={handleSubmitOrder} 
+                disabled={isLoading} 
+                className="w-full bg-[#e30019] hover:bg-red-700 disabled:bg-gray-400 text-white font-black py-4 rounded-lg uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-lg shadow-red-500/30"
+              >
+                {isLoading ? <><Loader2 size={24} className="animate-spin" /> Đang xử lý...</> : 'XÁC NHẬN ĐẶT HÀNG'}
+              </button>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Checkout;

@@ -141,9 +141,9 @@ const ProductDetail = () => {
   // --- CẤU HÌNH SLIDER ---
   const relatedSettings = {
     dots: false,
-    infinite: true, // Ép buộc lặp để dễ test
+    infinite: true, 
     speed: 500,
-    slidesToShow: 5, 
+    slidesToShow: 4, 
     slidesToScroll: 1,
     arrows: false, 
     responsive: [

@@ -1,14 +1,26 @@
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { Trash2, ArrowLeft, ShieldCheck, AlertCircle } from 'lucide-react';
 import { AppContext } from '../context/AppContext';
-import { IMAGE_URL } from '../utils/axiosClient';
 
 const Cart = () => {
-  const { cart, updateQuantity, removeFromCart } = useContext(AppContext);
+  const { cart, updateQuantity, removeFromCart, user } = useContext(AppContext);
   const navigate = useNavigate();
 
-  // Hàm xử lý ảnh
+  // Yêu cầu đăng nhập mới được xem giỏ
+  if (!user) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center bg-[#f8fafc]">
+        <AlertCircle size={64} className="text-gray-300 mb-4" />
+        <h2 className="text-xl font-bold text-gray-700 mb-2">Bạn chưa đăng nhập</h2>
+        <p className="text-gray-500 mb-6">Vui lòng đăng nhập để xem giỏ hàng của bạn.</p>
+        <Link to="/login" className="bg-[#203481] text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-800 transition">
+          ĐĂNG NHẬP NGAY
+        </Link>
+      </div>
+    );
+  }
+
   const getImageUrl = (img) => {
     if (!img) return 'https://via.placeholder.com/150';
     if (img.startsWith('http')) return img;
@@ -18,13 +30,13 @@ const Cart = () => {
     return `${BASE_URL}/images/${img}`;
   };
 
-  // Tính tổng tiền
+  // Tính tổng tiền dựa trên cấu trúc DB mới (item.computer.price)
   const totalPrice = cart.reduce((total, item) => {
-    const priceToUse = item.discountPrice || item.price;
+    if (!item.computer) return total;
+    const priceToUse = item.computer.price;
     return total + (priceToUse * item.quantity);
   }, 0);
 
-  // NẾU GIỎ HÀNG TRỐNG
   if (cart.length === 0) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center bg-gray-50">
@@ -37,7 +49,6 @@ const Cart = () => {
     );
   }
 
-  // NẾU CÓ HÀNG
   return (
     <div className="bg-[#f8fafc] min-h-screen py-8">
       <div className="container mx-auto px-4 max-w-6xl">
@@ -46,9 +57,7 @@ const Cart = () => {
         </h1>
 
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* CỘT TRÁI: DANH SÁCH SẢN PHẨM */}
           <div className="w-full lg:w-8/12 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            {/* Header bảng */}
             <div className="hidden md:grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-100 font-bold text-gray-600 text-sm uppercase">
               <div className="col-span-6">Sản phẩm</div>
               <div className="col-span-2 text-center">Đơn giá</div>
@@ -56,40 +65,39 @@ const Cart = () => {
               <div className="col-span-2 text-right">Thành tiền</div>
             </div>
 
-            {/* List Item */}
             <div className="divide-y divide-gray-100">
               {cart.map(item => {
-                const price = item.discountPrice || item.price;
+                if (!item.computer) return null; // Bảo vệ lỗi vặt
+                const comp = item.computer; // Lôi object máy tính ra
+                const price = comp.price; // Backend hiện tại chỉ lấy mỗi thuộc tính price
+
                 return (
                   <div key={item._id} className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center">
-                    {/* Thông tin SP */}
                     <div className="col-span-1 md:col-span-6 flex gap-4">
-                      <img src={getImageUrl(item.image)} alt={item.name} className="w-20 h-20 object-cover rounded-lg border border-gray-200" />
+                      <img src={getImageUrl(comp.image)} alt={comp.name} className="w-20 h-20 object-cover rounded-lg border border-gray-200" />
                       <div className="flex flex-col justify-center">
-                        <Link to={`/product/${item.slug}`} className="font-bold text-gray-800 hover:text-cyan-600 line-clamp-2">
-                          {item.name}
+                        <Link to={`/product/${comp.slug}`} className="font-bold text-gray-800 hover:text-cyan-600 line-clamp-2">
+                          {comp.name}
                         </Link>
+                        {/* TRUYỀN ID CỦA CARTITEM CHỨ KHÔNG PHẢI ID MÁY TÍNH */}
                         <button onClick={() => removeFromCart(item._id)} className="text-red-500 text-sm flex items-center gap-1 mt-2 hover:underline w-fit">
                           <Trash2 size={14} /> Xóa
                         </button>
                       </div>
                     </div>
 
-                    {/* Đơn giá */}
                     <div className="col-span-1 md:col-span-2 text-center font-bold text-gray-700 hidden md:block">
-                      {price.toLocaleString('vi-VN')} đ
+                      {price?.toLocaleString('vi-VN')} đ
                     </div>
 
-                    {/* Số lượng */}
                     <div className="col-span-1 md:col-span-2 flex justify-center">
                       <div className="flex items-center border border-gray-200 rounded h-9">
-                        <button onClick={() => updateQuantity(item._id, item.quantity - 1, item.stockQuantity)} className="px-3 hover:bg-gray-100 font-bold">-</button>
+                        <button onClick={() => updateQuantity(item._id, item.quantity - 1)} className="px-3 hover:bg-gray-100 font-bold">-</button>
                         <span className="w-8 text-center font-bold text-sm">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item._id, item.quantity + 1, item.stockQuantity)} className="px-3 hover:bg-gray-100 font-bold">+</button>
+                        <button onClick={() => updateQuantity(item._id, item.quantity + 1)} className="px-3 hover:bg-gray-100 font-bold">+</button>
                       </div>
                     </div>
 
-                    {/* Thành tiền */}
                     <div className="col-span-1 md:col-span-2 text-right font-black text-[#e30019]">
                       {(price * item.quantity).toLocaleString('vi-VN')} đ
                     </div>
@@ -99,7 +107,6 @@ const Cart = () => {
             </div>
           </div>
 
-          {/* CỘT PHẢI: TỔNG TIỀN & ĐẶT HÀNG */}
           <div className="w-full lg:w-4/12">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-24">
               <h2 className="font-black text-lg uppercase mb-4 border-b pb-4">Tóm tắt đơn hàng</h2>
@@ -125,12 +132,6 @@ const Cart = () => {
               >
                 <ShieldCheck size={20} /> Tiến hành đặt hàng
               </button>
-
-              <div className="mt-4 text-center">
-                <Link to="/" className="text-cyan-600 hover:text-cyan-700 text-sm font-bold flex items-center justify-center gap-1">
-                  <ArrowLeft size={16} /> Tiếp tục mua sắm
-                </Link>
-              </div>
             </div>
           </div>
 

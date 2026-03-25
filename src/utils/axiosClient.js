@@ -1,5 +1,8 @@
 import axios from 'axios';
 
+// ĐÂY LÀ DÒNG QUAN TRỌNG NHẤT ĐỂ SỬA LỖI TÀNG HÌNH:
+export const IMAGE_URL = 'http://localhost:3000';
+
 const axiosClient = axios.create({
   baseURL: 'http://localhost:3000/api',
   headers: {
@@ -7,10 +10,12 @@ const axiosClient = axios.create({
   },
 });
 
-// INTERCEPTOR: Tự động gắn Token vào Header trước khi gửi request lên BE
+// BỘ ĐÁNH CHẶN REQUEST
 axiosClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    // Tìm Token ở cả LocalStorage HOẶC SessionStorage
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -21,21 +26,25 @@ axiosClient.interceptors.request.use(
   }
 );
 
-// INTERCEPTOR: Xử lý lỗi trả về từ BE
+// BỘ ĐÁNH CHẶN RESPONSE
 axiosClient.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
-    // Nếu BE trả về lỗi 401 (Hết hạn Token), tự động đá văng ra trang Login
+    // Xử lý đá văng khi lỗi 401
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
 );
 
-export const IMAGE_URL = 'http://localhost:3000/images/'
 export default axiosClient;

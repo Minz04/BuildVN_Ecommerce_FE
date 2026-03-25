@@ -1,21 +1,36 @@
-import React, { useState, useRef, useContext } from 'react';
+import React, { useState, useRef, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { ShoppingCart, CheckCircle2, Heart } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { AppContext } from '../context/AppContext';
-import { IMAGE_URL } from '../utils/axiosClient';
 
 const ProductCard = ({ product }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const tooltipRef = useRef(null);
-  const { addToCart, user } = useContext(AppContext);
   const navigate = useNavigate();
   
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { addToCart, user, wishlist = [], toggleWishlist } = useContext(AppContext);
+
+  // =================================================================
+  // FIX LỖI GHOST TOOLTIP: DỌN DẸP KHI THẺ BỊ UNMOUNT (RESORT)
+  // =================================================================
+  useEffect(() => {
+    // Không cần lắng nghe window click/scroll nữa vì nó gây nhấp nháy.
+    // Logic onMouseEnter/onMouseLeave ở dưới HTML là đủ rồi.
+
+    // === HÀM DỌN DẸP CHỈ CHẠY KHI THẺ BỊ UNMOUNT (BỊ GỠ/ĐỔI VỊ TRÍ) ===
+    return () => {
+      // Khi thẻ bị bứng đi chỗ khác, chắc chắn tắt cái tooltip của nó đi
+      setShowTooltip(false); 
+    };
+  }, []); // [] rỗng để useEffect này chỉ chạy 1 lần khi mount, cleanup khi unmount
+  // =================================================================
 
   if (!product) return null;
+
+  const isFavorite = wishlist.some(item => item._id === product._id);
 
   const getImageUrl = (img) => {
     if (!img) return 'https://via.placeholder.com/200?text=No+Image';
@@ -58,7 +73,8 @@ const ProductCard = ({ product }) => {
       navigate('/login');
       return; 
     }
-    setIsFavorite(!isFavorite);
+    
+    toggleWishlist(product);
   };
 
   const specKeysOrder = ['cpu', 'main', 'ram', 'vga', 'storage', 'psu', 'case', 'cooling', 'monitor'];
@@ -69,9 +85,9 @@ const ProductCard = ({ product }) => {
       {/* KHUNG ẢNH SẢN PHẨM */}
       <div 
         className="relative mb-4 overflow-hidden rounded-lg cursor-pointer"
-        onMouseEnter={() => setShowTooltip(true)}
+        onMouseEnter={() => setShowTooltip(true)} // Rê chuột vào hiện
         onMouseMove={handleMouseMove}
-        onMouseLeave={() => setShowTooltip(false)}
+        onMouseLeave={() => setShowTooltip(false)} // Rê chuột ra tắt (React lo phần này)
       >
         <Link to={`/product/${product.slug || product._id}`} className="block">
           <img
@@ -171,7 +187,7 @@ const ProductCard = ({ product }) => {
           </div>
         </div>
 
-        {/* KHU VỰC NÚT BẤM ĐÃ FIX LỖI RỚT DÒNG */}
+        {/* KHU VỰC NÚT BẤM */}
         <div className="flex items-center justify-between mt-auto gap-1 md:gap-2">
           <button 
             onClick={(e) => { 
@@ -195,7 +211,6 @@ const ProductCard = ({ product }) => {
               <ShoppingCart size={16} />
             </div>
             
-            {/* Class whitespace-nowrap cấm tuyệt đối việc rớt dòng */}
             <span className={`transition-colors uppercase whitespace-nowrap tracking-tight 
               ${product.stockQuantity === 0 ? '' : 'group-hover/btn:text-blue-600'}`}>
               {product.stockQuantity === 0 ? 'Hết hàng' : 'Thêm vào giỏ'}

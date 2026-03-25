@@ -60,30 +60,42 @@ const Login = () => {
       email: formData.email.trim(),
       password: formData.password
     })
-  .then(response => {
-      const { token, user } = response.data;
+    authApi.login({
+      email: formData.email.trim(),
+      password: formData.password
+    })
+    .then(response => {
+      // 1. THÊM DÒNG NÀY ĐỂ XEM BACKEND TRẢ VỀ CÁI GÌ
+      console.log("DỮ LIỆU BACKEND TRẢ VỀ:", response.data); 
 
-      // Kiểm tra Remember Me để lưu token và user vào localStorage hoặc sessionStorage
-      if (formData.rememberMe) {
-        // Lưu vào localStorage để giữ đăng nhập lâu dài
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-      } else {
-        // Lưu vào sessionStorage để giữ đăng nhập ngắn hạn
-        sessionStorage.setItem('token', token);
-        sessionStorage.setItem('user', JSON.stringify(user));
+      // 2. CHÚ Ý DÒNG NÀY:
+      // Nếu Console (F12) in ra 'accessToken', hãy đổi chữ 'token' bên dưới thành 'accessToken'
+      const tokenToSave = response.data.token || response.data.accessToken; 
+      const userToSave = response.data.user;
+
+      if (!tokenToSave) {
+         toast.error("Lỗi: Không nhận được Token từ Backend!");
+         return;
       }
 
-      setUser(user); 
+      if (formData.rememberMe) {
+        localStorage.setItem('token', tokenToSave);
+        localStorage.setItem('user', JSON.stringify(userToSave));
+      } else {
+        sessionStorage.setItem('token', tokenToSave);
+        sessionStorage.setItem('user', JSON.stringify(userToSave));
+      }
+
+      setUser(userToSave); 
       toast.success('Đăng nhập thành công!');
       navigate('/');
     })
-  .catch(error => {
-    const errorMessage = error.response?.data?.message || 'Sai tài khoản hoặc mật khẩu';
-    toast.error(errorMessage);
-  })
-  .finally(() => setIsLoading(false));
-  };
+    .catch(error => {
+      const errorMessage = error.response?.data?.message || 'Sai tài khoản hoặc mật khẩu';
+      toast.error(errorMessage);
+    })
+    .finally(() => setIsLoading(false));
+    };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-10 px-4">

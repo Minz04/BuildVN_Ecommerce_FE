@@ -17,6 +17,8 @@ import Category from "./pages/Category";
 import Cart from "./pages/Cart";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import FlashSale from './pages/FlashSale';
+import Checkout from './pages/Checkout';
 
 const App = () => {
   return (      
@@ -29,8 +31,8 @@ const App = () => {
             <Route path='/' element={<Home />} />
             <Route path='/products' element={<Products />} /> 
             <Route path='/product/:slug' element={<ProductDetail />} />
-            <Route path='/wishlist' element={<WishList />} />  
             <Route path="/category/:slug" element={<Category />} /> 
+            <Route path="/flash-sale" element={<FlashSale />} />
 
             {/* CHỈ KHÁCH CHƯA ĐĂNG NHẬP */}
             <Route element={<GuestRoute />}>
@@ -41,6 +43,8 @@ const App = () => {
             {/* CHỈ NGƯỜI ĐÃ ĐĂNG NHẬP */}
             <Route element={<ProtectedRoute />}>
               <Route path='/cart' element={<Cart />} />
+            <Route path='/wishlist' element={<WishList />} />  
+              <Route path="/checkout" element={<Checkout />} />
             </Route>
           </Route>
         </Routes> 
