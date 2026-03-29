@@ -15,6 +15,9 @@ export const AppProvider = ({ children }) => {
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
+  const [isChatOpen, setIsChatOpen] = useState(false); 
+  const [chatProduct, setChatProduct] = useState(null);
+
   const [wishlist, setWishlist] = useState(() => {
     const savedWishlist = localStorage.getItem('wishlist');
     return savedWishlist ? JSON.parse(savedWishlist) : [];
@@ -118,7 +121,7 @@ export const AppProvider = ({ children }) => {
     <AppContext.Provider value={{ 
       cart, addToCart, updateQuantity, removeFromCart, getCartTotal, user, setUser, 
       wishlist, toggleWishlist, 
-      setCart 
+      setCart, isChatOpen, setIsChatOpen, chatProduct, setChatProduct 
     }}>
       {children}
     </AppContext.Provider>

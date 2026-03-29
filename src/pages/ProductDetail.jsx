@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ShoppingCart, CheckCircle2, AlertTriangle, ShieldCheck, Zap, Minus, Plus, ChevronRight, Gift, Clock3, TrendingUp, ChevronLeft, MessageCircle } from 'lucide-react'; 
+import { ShoppingCart, CheckCircle2, AlertTriangle, ShieldCheck, Zap, Minus, Plus, ChevronRight, Gift, Clock3, TrendingUp, ChevronLeft, MessageCircle, MessageSquare, Star } from 'lucide-react'; 
 import { toast } from 'react-toastify';
 import Slider from 'react-slick'; 
 import { AppContext } from '../context/AppContext';
@@ -8,6 +8,7 @@ import { productApi } from '../services/productApi';
 import { IMAGE_URL } from '../utils/axiosClient';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProductCard from '../components/ProductCard';
+import { reviewApi } from '../services/reviewApi';
 
 // Nhớ import CSS của slick (nếu chưa import ở App.js)
 import "slick-carousel/slick/slick.css"; 
@@ -16,7 +17,7 @@ import "slick-carousel/slick/slick-theme.css";
 const ProductDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { addToCart, user } = useContext(AppContext);
+  const { addToCart, user, setIsChatOpen, setChatProduct } = useContext(AppContext);
   const sliderRef = useRef(null); 
 
   const [product, setProduct] = useState(null);
@@ -26,6 +27,7 @@ const ProductDetail = () => {
   
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     const fetchMainAndRelated = async () => {
@@ -75,6 +77,20 @@ const ProductDetail = () => {
     fetchMainAndRelated();
     window.scrollTo(0, 0);
   }, [slug, navigate]);
+
+  useEffect(() => {
+    if (product?._id) {
+      const fetchReviews = async () => {
+        try {
+          const res = await reviewApi.getProductReviews(product._id);
+          setReviews(res.data.reviews || []);
+        } catch (error) {
+          console.error("Lỗi lấy danh sách đánh giá:", error);
+        }
+      };
+      fetchReviews();
+    }
+  }, [product?._id]);
 
   if (loading) return <LoadingSpinner />;
   if (!product) return null;
@@ -218,13 +234,21 @@ const ProductDetail = () => {
                     </div>
 
                     {/* Chat */}
-                    <Link 
-                        to="/chat" 
+                    <button 
+                        onClick={() => {
+                          if (!user) {
+                            toast.warning("Vui lòng đăng nhập để chat với Shop!");
+                            navigate('/login');
+                            return;
+                          }
+                          setChatProduct(product); // Nạp thông tin máy tính vào bộ nhớ
+                          setIsChatOpen(true);     // Bật khung chat lên
+                        }}
                         className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-5 py-2.5 text-base rounded-xl font-bold shadow-md hover:shadow-lg hover:-translate-y-1 transition-all"
                         title="Nhắn tin cho shop"
                     >
                         <MessageCircle size={20} /> Tư vấn ngay
-                    </Link>
+                    </button>
                 </div>
               </div>
 
@@ -293,7 +317,81 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* KHỐI 3: SẢN PHẨM TƯƠNG TỰ (ĐÃ NÂNG CẤP Z-INDEX) */}
+        {/* ======================================================= */}
+        {/* KHỐI 2.5: ĐÁNH GIÁ TỪ KHÁCH HÀNG (REVIEW SECTION)       */}
+        {/* ======================================================= */}
+        <div className="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+          <h3 className="font-black text-xl text-gray-800 mb-6 uppercase flex items-center gap-3 border-b pb-4 border-gray-100">
+            <Star className="text-yellow-400 fill-yellow-400" size={24} /> Khách hàng đánh giá
+          </h3>
+
+          {/* Phần Thống kê Tổng quan (Chỉ hiện khi có đánh giá) */}
+          {reviews.length > 0 ? (
+            <>
+              <div className="flex items-center gap-8 p-6 bg-[#fffbf8] border border-orange-100 rounded-xl mb-8">
+                <div className="flex flex-col items-center justify-center text-[#ee4d2d]">
+                  <div className="flex items-end gap-1">
+                    <span className="text-5xl font-black">{product.averageRating?.toFixed(1) || 5.0}</span>
+                    <span className="text-xl font-bold text-orange-400 mb-1">/ 5</span>
+                  </div>
+                  <div className="flex gap-1 mt-2">
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <Star key={s} size={20} className={s <= Math.round(product.averageRating || 5) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"} />
+                    ))}
+                  </div>
+                  <p className="text-gray-500 mt-2 font-medium">{product.totalReviews || reviews.length} đánh giá</p>
+                </div>
+
+                <div className="hidden sm:flex flex-wrap gap-3">
+                  <button className="px-5 py-2 border border-[#ee4d2d] text-[#ee4d2d] bg-white rounded-sm text-sm font-medium">Tất cả ({reviews.length})</button>
+                  <button className="px-5 py-2 border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 rounded-sm text-sm font-medium">5 Sao</button>
+                  <button className="px-5 py-2 border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 rounded-sm text-sm font-medium">Có bình luận</button>
+                </div>
+              </div>
+
+              {/* Danh sách từng Comment */}
+              <div className="space-y-6 divide-y divide-gray-100">
+                {reviews.map(review => (
+                  <div key={review._id} className="pt-6 first:pt-0 flex gap-4">
+                    {/* Avatar người dùng */}
+                    <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-200 shrink-0">
+                      <img 
+                        src={getImageUrl(review.user?.avatar)} 
+                        alt="Avatar" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.target.src = 'https://i.pinimg.com/736x/c6/e5/65/c6e56503cfdd87da299f72dc416023d4.jpg' }}
+                      />
+                    </div>
+                    {/* Nội dung đánh giá */}
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-800 text-sm mb-1">{review.user?.fullname || review.user?.username || 'Khách hàng ẩn danh'}</p>
+                      <div className="flex gap-1 mb-2">
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <Star key={star} size={14} className={star <= review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"} />
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-400 mb-3">
+                        {new Date(review.updatedAt).toLocaleString('vi-VN')} | Đã mua: {product.name}
+                      </p>
+                      <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded-lg border border-gray-100">
+                        {review.comment}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            // Hiển thị khi chưa có ai đánh giá
+            <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+              <MessageSquare size={60} className="mb-4 opacity-50" />
+              <p className="text-lg font-medium text-gray-500">Chưa có đánh giá nào cho sản phẩm này.</p>
+              <p className="text-sm mt-1">Hãy mua hàng và trở thành người đầu tiên đánh giá nhé!</p>
+            </div>
+          )}
+        </div>
+
+        {/* KHỐI 3: SẢN PHẨM TƯƠNG TỰ*/}
         {relatedProducts.length > 0 && (
             <section className="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 relative">
                  <div className="flex justify-between items-center mb-8 border-b pb-5 border-gray-100 gap-4">
@@ -337,7 +435,6 @@ const ProductDetail = () => {
                 )}
             </section>
         )}
-
       </div>
     </div>
   );

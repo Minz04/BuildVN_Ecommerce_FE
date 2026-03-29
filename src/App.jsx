@@ -19,6 +19,10 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import FlashSale from './pages/FlashSale';
 import Checkout from './pages/Checkout';
+import Orders from './pages/Orders';
+import OrderDetail from './pages/OrderDetail';
+import Profile from './pages/Profile';
+import ChatWidget from './components/ChatWidget';
 
 const App = () => {
   return (      
@@ -43,11 +47,15 @@ const App = () => {
             {/* CHỈ NGƯỜI ĐÃ ĐĂNG NHẬP */}
             <Route element={<ProtectedRoute />}>
               <Route path='/cart' element={<Cart />} />
-            <Route path='/wishlist' element={<WishList />} />  
+              <Route path='/wishlist' element={<WishList />} />  
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/orders/:id" element={<OrderDetail />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
           </Route>
-        </Routes> 
+        </Routes>
+        <ChatWidget /> 
       </Router>
     </AppProvider>
   )
