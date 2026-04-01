@@ -13,25 +13,19 @@ const ProductCard = ({ product }) => {
   
   const { addToCart, user, wishlist = [], toggleWishlist } = useContext(AppContext);
 
-  // =================================================================
-  // FIX LỖI GHOST TOOLTIP: DỌN DẸP KHI THẺ BỊ UNMOUNT (RESORT)
-  // =================================================================
+  //  Đảm bảo tooltip được dọn dẹp khi component unmount
   useEffect(() => {
-    // Không cần lắng nghe window click/scroll nữa vì nó gây nhấp nháy.
-    // Logic onMouseEnter/onMouseLeave ở dưới HTML là đủ rồi.
-
-    // === HÀM DỌN DẸP CHỈ CHẠY KHI THẺ BỊ UNMOUNT (BỊ GỠ/ĐỔI VỊ TRÍ) ===
     return () => {
-      // Khi thẻ bị bứng đi chỗ khác, chắc chắn tắt cái tooltip của nó đi
       setShowTooltip(false); 
     };
-  }, []); // [] rỗng để useEffect này chỉ chạy 1 lần khi mount, cleanup khi unmount
-  // =================================================================
+  }, []); 
 
   if (!product) return null;
 
+  // Kiểm tra sản phẩm có trong danh sách yêu thích hay không
   const isFavorite = wishlist.some(item => item._id === product._id);
 
+  // Hàm lấy URL ảnh
   const getImageUrl = (img) => {
     if (!img) return 'https://via.placeholder.com/200?text=No+Image';
     if (img.startsWith('http')) return img;
@@ -52,6 +46,7 @@ const ProductCard = ({ product }) => {
     ? Math.round(((originalPrice - salePrice) / originalPrice) * 100)
     : 0;
 
+  // Hàm xử lý di chuyển chuột cập nhật vị trí tooltip
   const handleMouseMove = (e) => {
     let x = e.clientX + 15;
     let y = e.clientY + 15;
@@ -64,6 +59,7 @@ const ProductCard = ({ product }) => {
     setMousePos({ x, y });
   };
 
+  // Hàm xử lý sự kiện click yêu thích
   const handleFavoriteClick = (e) => {
     e.preventDefault(); 
     e.stopPropagation(); 
@@ -82,7 +78,7 @@ const ProductCard = ({ product }) => {
   return (
     <div className="relative bg-white border border-gray-200 rounded-xl p-3 flex flex-col h-full hover:shadow-xl transition-all duration-300 group">
       
-      {/* KHUNG ẢNH SẢN PHẨM */}
+      {/* Khung ảnh sản phẩm */}
       <div 
         className="relative mb-4 overflow-hidden rounded-lg cursor-pointer"
         onMouseEnter={() => setShowTooltip(true)} // Rê chuột vào hiện
@@ -97,7 +93,7 @@ const ProductCard = ({ product }) => {
           />
         </Link>
 
-        {/* NÚT YÊU THÍCH */}
+        {/* Nút yêu thích */}
         <button
           onClick={handleFavoriteClick}
           className="absolute top-2 right-2 z-20 p-2 rounded-full bg-white/70 backdrop-blur-sm hover:bg-white text-gray-400 transition-all duration-300 shadow-sm hover:shadow-md"
@@ -107,7 +103,7 @@ const ProductCard = ({ product }) => {
         </button>
       </div>
 
-      {/* TOOLTIP HIỂN THỊ THÔNG SỐ */}
+      {/* Toolip hiển thị thông số */}
       {showTooltip && createPortal(
         <div 
           ref={tooltipRef}
@@ -151,7 +147,7 @@ const ProductCard = ({ product }) => {
         document.body
       )}
 
-      {/* THÔNG TIN SẢN PHẨM Ở DƯỚI ẢNH */}
+      {/* Thông tin sản phẩm ở dưới ảnh */}
       <div className="flex flex-col flex-grow">
         
         <div className="text-[11px] text-cyan-600 font-bold mb-1.5 uppercase tracking-wider">

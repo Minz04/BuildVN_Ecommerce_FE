@@ -10,23 +10,17 @@ const Checkout = () => {
   const { cart, user, setCart } = useContext(AppContext);
   const navigate = useNavigate();
 
-  // ==========================================
-  // BẢO VỆ ROUTE
-  // ==========================================
+  // Bảo vệ routes
   useEffect(() => {
     if (!user) navigate('/login');
     if (cart.length === 0) navigate('/cart');
   }, [user, cart, navigate]);
 
-  // ==========================================
-  // STATE ĐIỀU HƯỚNG & XỬ LÝ
-  // ==========================================
+  // State điều hướng bước thanh toán
   const [step, setStep] = useState(1); // 1: Thông tin, 2: Thanh toán
   const [isLoading, setIsLoading] = useState(false);
 
-  // ==========================================
-  // STATE FORM & API ĐỊA CHỈ VIỆT NAM
-  // ==========================================
+  // State địa chỉ
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
@@ -101,9 +95,7 @@ const Checkout = () => {
     });
   };
 
-  // ==========================================
-  // HÀM CHUYỂN BƯỚC 1 -> BƯỚC 2
-  // ==========================================
+  // Hàm xử lý bước 1 -> bước 2, có validate form
   const handleNextStep = (e) => {
     e.preventDefault();
     
@@ -123,9 +115,7 @@ const Checkout = () => {
     window.scrollTo(0, 0);
   };
 
-  // ==========================================
-  // HÀM SUBMIT CHỐT ĐƠN API (BƯỚC 2)
-  // ==========================================
+  // Hàm submit đơn hàng (được gọi khi chọn phương thức thanh toán ở bước 2)
   const handleSubmitOrder = async () => {
     setIsLoading(true);
     try {
@@ -214,9 +204,7 @@ const Checkout = () => {
             </div>
           </div>
 
-          {/* ========================================================= */}
-          {/* CONTENT STEP 1: ĐIỀN THÔNG TIN */}
-          {/* ========================================================= */}
+          {/* Bước 1: ĐIỀN THÔNG TIN */}
           {step === 1 && (
             <form onSubmit={handleNextStep} className="p-5 md:p-8">
               
@@ -291,9 +279,7 @@ const Checkout = () => {
             </form>
           )}
 
-          {/* ========================================================= */}
-          {/* CONTENT STEP 2: CHỌN PHƯƠNG THỨC THANH TOÁN */}
-          {/* ========================================================= */}
+          {/* Bước 2: CHỌN PHƯƠNG THỨC THANH TOÁN */}
           {step === 2 && (
             <div className="p-5 md:p-8">
               <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">

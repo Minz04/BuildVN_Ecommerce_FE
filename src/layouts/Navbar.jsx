@@ -37,7 +37,7 @@ const Navbar = () => {
     }
   };
 
-  // BƯỚC 2: Hàm xử lý Đăng xuất
+  // Hàm xử lý Đăng xuất
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('user');
@@ -45,6 +45,7 @@ const Navbar = () => {
     navigate('/login'); // Đá văng về trang đăng nhập
   };
 
+  // Hiệu ứng cuộn để ẩn hiện menu dưới
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 120) {
@@ -57,6 +58,7 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Hiệu ứng click ra ngoài để đóng menu "Tất cả danh mục"
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (categoryRef.current && !categoryRef.current.contains(event.target)) {
@@ -80,7 +82,7 @@ const Navbar = () => {
           </h1>
         </Link>
 
-        {/* KHUNG TÌM KIẾM */}
+        {/* Khung tìm kiếm */}
         <div className="flex-grow max-w-3xl flex items-center border-2 border-gray-200 focus-within:border-cyan-500 focus-within:shadow-[0_0_10px_rgba(6,182,212,0.2)] rounded-lg bg-white transition-all duration-300 relative">
 
           <div ref={categoryRef} className="relative h-full">
@@ -114,7 +116,7 @@ const Navbar = () => {
             <div className="absolute right-0 top-1/2 -translate-y-1/2 h-1/2 w-[1px] bg-gray-200"></div>
           </div>
 
-          {/* INPUT TÌM KIẾM CƠ BẢN */}
+          {/* Input tìm kiếm */}
           <div className="relative flex-grow h-full flex items-center">
             <input
               type="text"
@@ -134,7 +136,7 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* CÔNG CỤ */}
+        {/* Công cụ */}
         <div className="flex items-center gap-5">
           
           <div className="flex items-center gap-3 cursor-pointer group">
@@ -172,7 +174,6 @@ const Navbar = () => {
             // NẾU ĐÃ ĐĂNG NHẬP -> Hiện Avatar + Tên + Menu Đăng xuất
             <div className="relative group cursor-pointer flex items-center gap-3">
               
-              {/* --- ĐÃ SỬA: KHỐI HIỂN THỊ AVATAR --- */}
               <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0">
                 <img 
                   src={
@@ -184,7 +185,6 @@ const Navbar = () => {
                   className="w-full h-full object-cover"
                 />
               </div>
-              {/* ----------------------------------- */}
 
               <div className="text-[14px] hidden lg:block">
                 <p className="text-gray-500 font-medium leading-tight">Xin chào,</p>

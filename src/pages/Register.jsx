@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 // THÊM DÒNG NÀY:
 import { authApi } from '../services/authApi'; 
 
-// FIX LỖI VĂNG FOCUS: Di chuyển InputField ra ngoài Component chính
+// Component input tái sử dụng cho form
 const InputField = ({ label, type, name, placeholder, value, onChange, onBlur, error }) => (
   <div className="flex flex-col gap-1 w-full">
     <label className="text-sm font-bold text-gray-900">
@@ -22,17 +22,20 @@ const InputField = ({ label, type, name, placeholder, value, onChange, onBlur, e
   </div>
 );
 
+// MAIN COMPONENT
 const Register = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
+  // STATE: FORM DỮ LIỆU VÀ LỖI
   const [formData, setFormData] = useState({
     fullname: '', username: '', email: '', phone: '', address: '', password: '', confirmPassword: ''
   });
   const [errors, setErrors] = useState({});
 
+  // Hàm tính độ mạnh mật khẩu
   const getPasswordStrength = (pass) => {
     if (!pass) return { width: 'w-0', color: 'bg-gray-200', text: '' };
     let strength = 0;
@@ -94,6 +97,7 @@ const Register = () => {
     }
   };
 
+  // HÀM XỬ LÝ SUBMIT FORM
   const handleSubmit = (e) => {
     e.preventDefault();
     

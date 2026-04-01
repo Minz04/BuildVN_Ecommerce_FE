@@ -8,7 +8,7 @@ const Store_address = () => {
   return (
     <div className="w-full">
 
-      {/* CHÍNH SÁCH BÁN HÀNG - Đồng bộ nền pattern với Home */}
+      {/* Chính sách bán hàng */}
       <section className="bg-[#f8fafc] bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px] py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -77,7 +77,7 @@ const Store_address = () => {
         </div>
       </section>
 
-      {/* SHOWROOM - Chuyển sang phong cách Modern Slate, bỏ cắt xéo */}
+      {/* SHOWROOM */}
       <section className="bg-slate-900 py-16 text-white relative border-t border-slate-800">
         <div className="container mx-auto px-4 relative z-10">
 

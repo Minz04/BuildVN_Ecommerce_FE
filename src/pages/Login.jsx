@@ -65,19 +65,17 @@ const Login = () => {
       password: formData.password
     })
     .then(response => {
-      // 1. THÊM DÒNG NÀY ĐỂ XEM BACKEND TRẢ VỀ CÁI GÌ
-      console.log("DỮ LIỆU BACKEND TRẢ VỀ:", response.data); 
-
-      // 2. CHÚ Ý DÒNG NÀY:
-      // Nếu Console (F12) in ra 'accessToken', hãy đổi chữ 'token' bên dưới thành 'accessToken'
+      // Xử lý token và user từ response.
       const tokenToSave = response.data.token || response.data.accessToken; 
       const userToSave = response.data.user;
 
+      // Kiểm tra nếu không nhận được token thì không tiếp tục và hiển thị lỗi
       if (!tokenToSave) {
          toast.error("Lỗi: Không nhận được Token từ Backend!");
          return;
       }
 
+      // Lưu token và user vào localStorage hoặc sessionStorage
       if (formData.rememberMe) {
         localStorage.setItem('token', tokenToSave);
         localStorage.setItem('user', JSON.stringify(userToSave));
@@ -86,6 +84,7 @@ const Login = () => {
         sessionStorage.setItem('user', JSON.stringify(userToSave));
       }
 
+      // Cập nhật user vào context để các component khác biết đã đăng nhập
       setUser(userToSave); 
       toast.success('Đăng nhập thành công!');
       navigate('/');

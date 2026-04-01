@@ -4,9 +4,8 @@ import { Outlet } from 'react-router-dom';
 const AuthLayout = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      {/* Không gọi Navbar hay Footer ở đây */}
       <div className="w-full max-w-md p-8 bg-white rounded shadow-md">
-        <Outlet /> {/* Nội dung form Login/Register sẽ chui vào đây */}
+        <Outlet /> 
       </div>
     </div>
   );

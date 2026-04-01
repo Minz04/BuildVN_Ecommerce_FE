@@ -15,7 +15,7 @@ export const AppProvider = ({ children }) => {
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
-  const [isChatOpen, setIsChatOpen] = useState(false); 
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatProduct, setChatProduct] = useState(null);
 
   const [wishlist, setWishlist] = useState(() => {
@@ -25,14 +25,13 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchCart = async () => {
-      // BƯỚC CHỐNG LỖI: Kiểm tra xem token đã được lưu vào máy chưa
-      const currentToken = localStorage.getItem('token') || sessionStorage.getItem('token');
-      
-      // CHỈ GỌI API KHI: Có User VÀ Có Token
+      const currentToken = localStorage.getItem('token') || sessionStorage.getItem('token'); // Lấy token từ localStorage hoặc sessionStorage để kiểm tra
+
+      // Nếu đã đăng nhập (có user và token), thì mới gọi API lấy giỏ hàng
       if (user && currentToken) {
         try {
           const res = await cartApi.getCart();
-          setCart(res.data.cartItem || []); 
+          setCart(res.data.cartItem || []);
         } catch (error) {
           console.error("Lỗi lấy giỏ hàng:", error);
           // Nếu lỗi lấy giỏ hàng, tạm thời set giỏ rỗng chứ đừng làm gì khác
@@ -42,7 +41,7 @@ export const AppProvider = ({ children }) => {
         setCart([]); // Nếu chưa đăng nhập thì xóa giỏ hàng
       }
     };
-    
+
     fetchCart();
   }, [user]);
 
@@ -56,12 +55,12 @@ export const AppProvider = ({ children }) => {
       // Gọi API thêm vào DB
       await cartApi.addToCart(product._id, quantityToAdd);
       toast.success(`Đã thêm ${product.name} vào giỏ`);
-      
+
       // Load lại giỏ hàng mới nhất từ DB
       const res = await cartApi.getCart();
       setCart(res.data.cartItem || []);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Có lỗi xảy ra");
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra"); // Hiển thị lỗi từ server nếu có, hoặc lỗi chung
     }
   };
 
@@ -69,14 +68,14 @@ export const AppProvider = ({ children }) => {
   const updateQuantity = async (cartitemId, newQuantity, stockQuantity) => {
     if (newQuantity <= 0) return;
     try {
-      await cartApi.updateQuantity(cartitemId, newQuantity);
-      
-      // Cập nhật lại state giỏ hàng trên UI cho nhanh (Không cần gọi lại API getCart)
-      setCart(prevCart => prevCart.map(item => 
+      await cartApi.updateQuantity(cartitemId, newQuantity); // Cập nhật số lượng trên DB
+
+      // Cập nhật state UI
+      setCart(prevCart => prevCart.map(item =>
         item._id === cartitemId ? { ...item, quantity: newQuantity } : item
       ));
     } catch (error) {
-      toast.error(error.response?.data?.message || "Lỗi cập nhật số lượng");
+      toast.error(error.response?.data?.message || "Lỗi cập nhật số lượng"); 
     }
   };
 
@@ -103,7 +102,7 @@ export const AppProvider = ({ children }) => {
   const toggleWishlist = (product) => {
     // Kiểm tra trực tiếp trên state 'wishlist' hiện tại
     const isExist = wishlist.find(item => item._id === product._id);
-    
+
     if (isExist) {
       // Bắn thông báo TRƯỚC
       toast.info("Đã gỡ sản phẩm khỏi danh sách Yêu thích");
@@ -118,10 +117,11 @@ export const AppProvider = ({ children }) => {
   };
 
   return (
-    <AppContext.Provider value={{ 
-      cart, addToCart, updateQuantity, removeFromCart, getCartTotal, user, setUser, 
-      wishlist, toggleWishlist, 
-      setCart, isChatOpen, setIsChatOpen, chatProduct, setChatProduct 
+    <AppContext.Provider value={{
+      cart, addToCart, updateQuantity, removeFromCart, getCartTotal, user, setUser,
+      wishlist, toggleWishlist,
+      setCart,
+      isChatOpen, setIsChatOpen, chatProduct, setChatProduct
     }}>
       {children}
     </AppContext.Provider>

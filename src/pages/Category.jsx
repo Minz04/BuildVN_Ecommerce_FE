@@ -64,7 +64,7 @@ const Category = () => {
     );
   }
 
-  // --- LOGIC PHÂN TRANG ---
+  // Xử lý phân trang
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
   const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);
@@ -108,7 +108,7 @@ const Category = () => {
               ))}
             </div>
 
-            {/* GIAO DIỆN NÚT CHUYỂN TRANG */}
+            {/* Giao diện nút chuyển trang */}
             {totalPages > 1 && (
               <div className="flex justify-center items-center gap-2 mt-12 mb-8">
                 {/* Nút Trang trước */}

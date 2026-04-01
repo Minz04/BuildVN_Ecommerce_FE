@@ -97,7 +97,7 @@ const Home = () => {
            setSubBanners(bannerRes.data.filter(b => b.type === 'sub'));
         }
       } catch (error) {
-        console.error("🚨 Lỗi khi gọi API Banner:", error);
+        console.error("Lỗi khi gọi API Banner:", error);
       } finally {
         setLoading(false);
       }

@@ -14,23 +14,17 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
 
-  // ==========================================
   // STATE: HỒ SƠ
-  // ==========================================
   const [profileData, setProfileData] = useState({
     fullname: '', phone: '', email: '', gender: 'Nam', dob: '', avatar: ''
   });
 
-  // ==========================================
   // STATE: ĐỊA CHỈ (JSON TRICK)
-  // ==========================================
   const [addresses, setAddresses] = useState([]);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState(null);
 
-  // ==========================================
   // STATE: MẬT KHẨU
-  // ==========================================
   const [passwordData, setPasswordData] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
 
   // Load API Hành chính VN
@@ -44,9 +38,7 @@ const Profile = () => {
     ward: '', wardName: '', street: '', type: 'Nhà Riêng', isDefault: false
   });
 
-  // ==========================================
   // FETCH DỮ LIỆU BAN ĐẦU
-  // ==========================================
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
     
@@ -97,9 +89,7 @@ const Profile = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ==========================================
-  // HÀM LƯU HỒ SƠ (TAB 1)
-  // ==========================================
+  // HÀM LƯU HỒ SƠ 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -121,9 +111,7 @@ const Profile = () => {
     }
   };
 
-  // ==========================================
-  // XỬ LÝ ĐỔI MẬT KHẨU (TAB 3)
-  // ==========================================
+  // XỬ LÝ ĐỔI MẬT KHẨU 
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -150,9 +138,7 @@ const Profile = () => {
     }
   };
 
-  // ==========================================
-  // XỬ LÝ ĐỊA CHỈ (Đã sửa cho khớp API Github)
-  // ==========================================
+  // XỬ LÝ ĐỊA CHỈ 
   const openModal = (addr = null) => {
     if (addr) {
       setEditingAddressId(addr.id);
@@ -245,9 +231,7 @@ const Profile = () => {
     }
   };
 
-  // ==========================================
   // RENDER UI
-  // ==========================================
   if (isFetching) return <div className="min-h-screen flex justify-center items-center bg-[#f5f5f5]"><Loader2 className="animate-spin text-[#ee4d2d]" size={40}/></div>;
 
   return (
@@ -483,9 +467,7 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* ========================================= */}
       {/* MODAL THÊM/SỬA ĐỊA CHỈ                    */}
-      {/* ========================================= */}
       {showAddressModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex justify-center items-center">
           <div className="bg-white rounded-md w-[500px] shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">

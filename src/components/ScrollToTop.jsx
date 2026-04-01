@@ -10,7 +10,7 @@ const ScrollToTop = () => {
     window.scrollTo({
       top: 0,
       left: 0,
-      behavior: "instant" // Dùng "instant" để chuyển ngay lập tức, hoặc "smooth" nếu muốn cuộn từ từ
+      behavior: "instant" // Cuộn ngay lập tức or dùng 'smooth' để cuộn mượt mà
     });
   }, [pathname]);
 

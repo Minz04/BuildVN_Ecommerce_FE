@@ -14,7 +14,6 @@ export const productApi = {
     return axiosClient.get(`/computers/${slug}`);
   },
 
-  // DÙNG HÀM NÀY: Tìm thẳng bằng cái ID gốc
   getByCategoryId: (categoryId) => {
     return axiosClient.get(`/computers/category/${categoryId}`);
   }

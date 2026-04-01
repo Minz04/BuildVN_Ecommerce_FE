@@ -126,9 +126,7 @@ const Products = () => {
 
         <div className="flex flex-col lg:flex-row gap-6">
 
-          {/* ========================================================= */}
           {/* BỘ LỌC (CỘT TRÁI) */}
-          {/* ========================================================= */}
           <div className="lg:w-1/4">
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 sticky top-28">
               <h3 className="font-black text-lg flex items-center gap-2 border-b border-gray-100 pb-3 mb-4 uppercase text-gray-800">
@@ -160,9 +158,7 @@ const Products = () => {
             </div>
           </div>
 
-          {/* ========================================================= */}
           {/* KẾT QUẢ TÌM KIẾM (CỘT PHẢI) */}
-          {/* ========================================================= */}
           <div className="lg:w-3/4">
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">

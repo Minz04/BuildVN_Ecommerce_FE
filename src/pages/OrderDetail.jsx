@@ -16,7 +16,7 @@ const OrderDetail = () => {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // === STATE CHO CHỨC NĂNG ĐÁNH GIÁ ===
+  // STATE CHO CHỨC NĂNG ĐÁNH GIÁ
   const [reviewModal, setReviewModal] = useState({ isOpen: false, item: null, isChecking: false });
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +47,7 @@ const OrderDetail = () => {
     return `${BASE_URL}/images/${img}`;
   };
 
-  // === CÁC HÀM XỬ LÝ ĐÁNH GIÁ ===
+  // CÁC HÀM XỬ LÝ ĐÁNH GIÁ
   const handleOpenReview = async (item) => {
     setReviewModal({ isOpen: true, item, isChecking: true });
     try {
@@ -195,7 +195,7 @@ const OrderDetail = () => {
           </div>
         </div>
 
-        {/* DANH SÁCH SẢN PHẨM & NÚT ĐÁNH GIÁ */}
+        {/* Danh sách sản phẩm & nút đánh giá */}
         <div className="bg-white shadow-sm rounded-b-xl overflow-hidden pb-4">
           <div className="p-4 border-b border-gray-100 flex items-center gap-2 bg-gray-50">
             <Store className="text-gray-600" size={18} />
@@ -253,9 +253,7 @@ const OrderDetail = () => {
 
       </div>
 
-      {/* ========================================================= */}
-      {/* POPUP (MODAL) ĐÁNH GIÁ SẢN PHẨM 5 SAO                       */}
-      {/* ========================================================= */}
+      {/* Popup: Đánh giá sản phẩm 5 sao */}
       {reviewModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-xl w-full max-w-lg overflow-hidden shadow-2xl scale-in-center">

@@ -1,6 +1,4 @@
 import axios from 'axios';
-
-// ĐÂY LÀ DÒNG QUAN TRỌNG NHẤT ĐỂ SỬA LỖI TÀNG HÌNH:
 export const IMAGE_URL = 'http://localhost:3000';
 
 const axiosClient = axios.create({

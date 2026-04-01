@@ -29,11 +29,13 @@ const ProductDetail = () => {
   const [loadingRelated, setLoadingRelated] = useState(false);
   const [reviews, setReviews] = useState([]);
 
+  // HÀM LẤY URL ẢNH
   useEffect(() => {
     const fetchMainAndRelated = async () => {
       setLoading(true);
       setLoadingRelated(true); 
 
+      // 1. Lấy chi tiết sản phẩm chính
       try {
         const res = await productApi.getProductBySlug(slug);
         if (res.data) {
@@ -42,15 +44,15 @@ const ProductDetail = () => {
           setQuantity(1); 
           setActiveImg(0); 
 
+          // 2. Lấy sản phẩm liên quan dựa trên category của sản phẩm chính
           const categoryId = typeof fetchedProduct.category === 'object' 
                                 ? fetchedProduct.category._id 
                                 : fetchedProduct.category;
 
+          // Nếu có categoryId, mới gọi API lấy sản phẩm liên quan
           if (categoryId) {
             try {
-                // SỬA LỖI 404 BẰNG MẸO FRONTEND
                 const allProductsRes = await productApi.getAllProducts();
-                
                 const filtered = allProductsRes.data.filter(p => {
                     const pCatId = typeof p.category === 'object' ? p.category._id : p.category;
                     return pCatId === categoryId && p._id !== fetchedProduct._id;
@@ -78,6 +80,7 @@ const ProductDetail = () => {
     window.scrollTo(0, 0);
   }, [slug, navigate]);
 
+  // Lấy danh sách đánh giá khi có sản phẩm
   useEffect(() => {
     if (product?._id) {
       const fetchReviews = async () => {
@@ -95,6 +98,7 @@ const ProductDetail = () => {
   if (loading) return <LoadingSpinner />;
   if (!product) return null;
 
+  // Hàm lấy URL ảnh
   const getImageUrl = (img) => {
     if (!img) return 'https://via.placeholder.com/600?text=No+Image';
     if (img.startsWith('http')) return img;
@@ -106,17 +110,20 @@ const ProductDetail = () => {
     return `${BASE_URL}/images/${cleanImg}`;
   };
 
+  // Hàm hỗ trợ lấy URL ảnh từ backend, có xử lý trường hợp đường dẫn khác nhau
   const productImages = [
     getImageUrl(product.image),
     getImageUrl(product.image), 
     getImageUrl(product.image) 
   ];
 
+  // Nếu product.images là mảng, ưu tiên dùng nó để hiển thị nhiều ảnh hơn
   const currentPrice = product.price; 
   const oldPrice = product.oldPrice; 
   const isFlashSale = oldPrice && oldPrice > currentPrice;
   const discountAmount = isFlashSale ? (oldPrice - currentPrice) : 0;
 
+  // Hàm xử lý thay đổi số lượng
   const handleQuantityChange = (type) => {
     if (type === 'minus' && quantity > 1) {
       setQuantity(prev => prev - 1);
@@ -126,6 +133,7 @@ const ProductDetail = () => {
     }
   };
 
+  // Hàm xử lý thêm vào giỏ hàng
   const handleAddToCart = () => {
     if (!user) {
       toast.warning("Vui lòng đăng nhập để mua hàng!");
@@ -135,6 +143,7 @@ const ProductDetail = () => {
     addToCart(product, quantity); 
   };
 
+  // Xử lý hiển thị thông số kỹ thuật
   let displaySpecs = {};
   if (product.specs) {
       if (typeof product.specs === 'string') {
@@ -142,6 +151,7 @@ const ProductDetail = () => {
       } else { displaySpecs = product.specs; }
   }
 
+  // Cấu hình cho bảng thông số kỹ thuật, có thêm cột bảo hành
   const specsForTable = [
     { key: 'cpu', label: 'Vi xử lý (CPU)', warranty: '36 Tháng' },
     { key: 'main', label: 'Bo mạch chủ (Mainboard)', warranty: '36 Tháng' },
@@ -154,7 +164,7 @@ const ProductDetail = () => {
     { key: 'monitor', label: 'Màn hình', warranty: '24 Tháng' }
   ];
 
-  // --- CẤU HÌNH SLIDER ---
+  // CẤU HÌNH SLIDER 
   const relatedSettings = {
     dots: false,
     infinite: true, 
@@ -317,9 +327,7 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* ======================================================= */}
         {/* KHỐI 2.5: ĐÁNH GIÁ TỪ KHÁCH HÀNG (REVIEW SECTION)       */}
-        {/* ======================================================= */}
         <div className="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
           <h3 className="font-black text-xl text-gray-800 mb-6 uppercase flex items-center gap-3 border-b pb-4 border-gray-100">
             <Star className="text-yellow-400 fill-yellow-400" size={24} /> Khách hàng đánh giá
