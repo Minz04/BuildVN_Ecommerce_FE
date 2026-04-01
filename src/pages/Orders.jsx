@@ -16,8 +16,25 @@ const TABS = [
 ];
 
 const Orders = () => {
-  const { user } = useContext(AppContext);
+  const { user, addToCart } = useContext(AppContext);
   const navigate = useNavigate();
+
+  // Hàm mua lại đơn hàng 
+  const handleBuyAgain = async (order) => {
+    const itemsToBuy = order.items || order.orderItems || []; 
+    
+    if(itemsToBuy.length === 0) return; // Nếu không có sản phẩm nào trong đơn thì thôi
+
+    // Thêm từng sản phẩm vào giỏ hàng 
+    try {
+      for (const item of itemsToBuy) {
+        await addToCart(item.computer, item.quantity);
+      }
+      navigate('/cart');
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi thêm vào giỏ hàng!");
+    }
+  };
 
   const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState('');
@@ -101,19 +118,32 @@ const Orders = () => {
       <div className="container mx-auto px-4 max-w-6xl flex flex-col md:flex-row gap-6">
         
         {/* MENU TRÁI (Tùy chọn hiển thị) */}
-        <div className="hidden md:block w-1/4">
-          <div className="bg-white p-4 rounded-xl shadow-sm flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden border">
-              <img src="https://i.pinimg.com/736x/c6/e5/65/c6e56503cfdd87da299f72dc416023d4.jpg" alt="Avatar" className="w-full h-full object-cover"/>
+        <div className="w-full md:w-[250px] shrink-0">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-200">
+              <img 
+                src={
+                  !user?.avatar ? 'https://i.pinimg.com/736x/c6/e5/65/c6e56503cfdd87da299f72dc416023d4.jpg' 
+                  : user.avatar.startsWith('http') ? user.avatar 
+                  : `http://localhost:3000${user.avatar}`
+                } 
+                alt="Avatar" 
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
-              <p className="font-bold text-gray-800">{user?.fullname || user?.email}</p>
-              <p className="text-xs text-gray-500">Sửa hồ sơ</p>
+              <p className="font-bold text-gray-800 line-clamp-1">{user?.fullname || user?.username}</p>
+              <p className="text-sm text-gray-500 flex items-center gap-1"> Sửa hồ sơ</p>
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <Link to="/profile" className="px-5 py-4 hover:bg-gray-50 font-medium text-gray-700 flex items-center transition-colors">Tài khoản của tôi</Link>
-            <Link to="/orders" className="px-5 py-4 bg-red-50 text-[#e30019] font-bold border-l-4 border-[#e30019] flex items-center">Đơn mua</Link>
+          <div className="flex flex-col gap-4 text-sm font-medium text-gray-700">
+            <Link to="/profile" className="flex items-center gap-2 hover:text-[#ee4d2d]">
+               Tài khoản của tôi
+            </Link>
+            {/* Chữ Đơn mua được in đậm và đổi màu đỏ để biết đang ở trang này */}
+            <Link to="/orders" className="flex items-center gap-2 text-[#ee4d2d]">
+               Đơn Mua
+            </Link>
           </div>
         </div>
 
@@ -206,6 +236,15 @@ const Orders = () => {
                             className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors flex items-center gap-2"
                           >
                             {cancelingId === order._id ? <Loader2 size={16} className="animate-spin"/> : 'Hủy đơn hàng'}
+                          </button>
+                        )}
+                        {/* Hiên thị nút mua lại nếu đơn bị hủy */}
+                        {order.status === 'CANCELLED' && (
+                          <button 
+                            onClick={() => handleBuyAgain(order)}
+                            className="px-5 py-2 border border-[#ee4d2d] text-[#ee4d2d] bg-white hover:bg-red-50 text-sm font-bold rounded transition-colors"
+                          >
+                            Mua lại
                           </button>
                         )}
                         <Link 

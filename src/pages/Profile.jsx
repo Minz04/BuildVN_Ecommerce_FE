@@ -111,6 +111,24 @@ const Profile = () => {
     }
   };
 
+  // Hàm tính độ mạnh của mật khẩu
+  const getPasswordStrength = (pass) => {
+    if (!pass) return { width: 'w-0', color: 'bg-gray-200', text: '' };
+    let strength = 0;
+
+    if (pass.length >= 8) strength++;
+    if (/[a-z]/.test(pass)) strength++;
+    if (/[A-Z]/.test(pass)) strength++;
+    if (/[0-9]/.test(pass)) strength++;
+    if (/[^A-Za-z0-9]/.test(pass)) strength++;
+
+    if (strength <= 2) return { width: 'w-1/3', color: 'bg-red-500', text: 'Yếu' };
+    if (strength === 3 || strength === 4) return { width: 'w-2/3', color: 'bg-yellow-500', text: 'Trung bình' };
+    return { width: 'w-full', color: 'bg-green-500', text: 'Mạnh' };
+  };
+  
+  const passStrength = getPasswordStrength(passwordData.newPassword);  
+
   // XỬ LÝ ĐỔI MẬT KHẨU 
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -121,6 +139,9 @@ const Profile = () => {
     if (passwordData.newPassword.length < 6) {
       toast.warning('Mật khẩu mới phải có ít nhất 6 ký tự');
       return;
+    }
+    if (passStrength.text === 'Yếu') {
+      return toast.warning('Mật khẩu quá yếu! Vui lòng thêm số, chữ hoa hoặc ký tự đặc biệt.');
     }
 
     setIsLoading(true);
@@ -443,6 +464,14 @@ const Profile = () => {
                   <label className="w-1/3 text-right pr-6 text-gray-500 text-sm font-medium">Mật khẩu mới</label>
                   <div className="w-2/3">
                     <input type="password" required value={passwordData.newPassword} onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})} className="w-full px-3 py-2 border rounded-sm outline-none focus:border-gray-400" />
+                    {passwordData.newPassword && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden flex">
+                          <div className={`h-full transition-all duration-300 ${passStrength.width} ${passStrength.color}`}></div>
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase w-16 text-right">{passStrength.text}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center">

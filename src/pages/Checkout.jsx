@@ -21,6 +21,8 @@ const Checkout = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // State địa chỉ
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState('new');
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
@@ -53,6 +55,33 @@ const Checkout = () => {
       .then(res => setProvinces(res.data))
       .catch(err => console.error("Lỗi tải API Địa chỉ:", err));
   }, []);
+
+  // Nếu user đã có địa chỉ hiển thị lựa chọn địa chỉ đã lưu hoặc nhập mới
+  useEffect(() => {
+    if (user && user.address) {
+      try {
+        // Đọc và parse địa chỉ từ user.address, nếu có lỗi sẽ nhảy vào catch (trường hợp dữ liệu cũ chưa được cập nhật)
+        const parsed = JSON.parse(user.address);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setSavedAddresses(parsed);
+          const defaultAddr = parsed.find(a => a.isDefault) || parsed[0];
+          setSelectedAddressId(defaultAddr.id);
+        }
+      } catch (e) { 
+        // Trường hợp dữ liệu cũ chưa được cập nhật lên định dạng mới, tạo một địa chỉ tạm thời từ thông tin có sẵn
+        const legacyAddress = [{
+          id: 'legacy_default',
+          name: user.fullname || user.username || 'Khách hàng',
+          phone: user.phone || '',
+          fullAddress: user.address,
+          type: 'Nhà riêng',
+          isDefault: true
+        }];
+        setSavedAddresses(legacyAddress);
+        setSelectedAddressId('legacy_default');
+      }
+    }
+  }, [user]);
 
   // XỬ LÝ KHI CHỌN TỈNH -> TẢI HUYỆN
   const handleProvinceChange = (e) => {
@@ -95,16 +124,21 @@ const Checkout = () => {
     });
   };
 
-  // Hàm xử lý bước 1 -> bước 2, có validate form
+  // Hàm xử lý khi nhấn nút "Tiếp tục đến thanh toán" ở bước 1
   const handleNextStep = (e) => {
     e.preventDefault();
     
+    // Nếu có địa chỉ đã lưu được chọn và qua bước 2 mà không cần nhập lại thông tin
+    if (selectedAddressId !== 'new') {
+       setStep(2);
+       window.scrollTo(0, 0);
+       return;
+    }
+
     if (!formData.fullname || !formData.phone || !formData.province || !formData.district || !formData.ward || !formData.street) {
       toast.warning("Vui lòng điền đầy đủ thông tin giao hàng!");
       return;
     }
-    
-    // Regex chuẩn 100% cho số điện thoại di động Việt Nam (10 số)
     const phoneRegex = /^(0[3|5|7|8|9])[0-9]{8}$/;
     if (!phoneRegex.test(formData.phone)) {
       toast.error("Số điện thoại không hợp lệ! Vui lòng nhập số di động 10 số.");
@@ -119,24 +153,33 @@ const Checkout = () => {
   const handleSubmitOrder = async () => {
     setIsLoading(true);
     try {
-      // 1. Gộp chuỗi địa chỉ cực kỳ cẩn thận
-      const addressString = `${formData.street}, ${formData.wardName}, ${formData.districtName}, ${formData.provinceName}`;
-      // Nếu khách có nhập ghi chú thì nối vào, không thì thôi
-      const finalAddress = formData.note.trim() ? `${addressString} (Ghi chú: ${formData.note.trim()})` : addressString;
+      let finalAddress = '';
+      let finalPhone = '';
 
-      // 2. GỌI API BACKEND
+      // Kiểm tra xem khách chọn địa chỉ có sẵn hay nhập mới
+      if (selectedAddressId !== 'new') {
+        const chosenAddr = savedAddresses.find(a => a.id === selectedAddressId);
+        finalAddress = formData.note.trim() ? `${chosenAddr.fullAddress} (Ghi chú: ${formData.note.trim()})` : chosenAddr.fullAddress;
+        finalPhone = chosenAddr.phone;
+      } else {
+        const addressString = `${formData.street}, ${formData.wardName}, ${formData.districtName}, ${formData.provinceName}`;
+        finalAddress = formData.note.trim() ? `${addressString} (Ghi chú: ${formData.note.trim()})` : addressString;
+        finalPhone = formData.phone;
+      }
+
+      // GỌI API BACKEND VỚI ĐỊA CHỈ CUỐI CÙNG
       const res = await orderApi.createOrder({
         shippingAddress: finalAddress,
-        phone: formData.phone
+        phone: finalPhone
       });
 
       const orderId = res.data.orderId;
-      setCart([]); // Xóa giỏ hàng (Bây giờ đã hoạt động 100%)
+      setCart([]); 
+      localStorage.removeItem('cart'); // Xóa giỏ hàng
 
-      // 3. XỬ LÝ VNPAY NẾU CÓ
+      // XỬ LÝ VNPAY NẾU CÓ
       if (paymentMethod === 'VNPAY') {
         toast.info('Đang chuyển hướng sang VNPAY...');
-        // Đảm bảo trong services/orderApi.js bạn cấu hình đúng link VNPAY của BE
         const paymentRes = await orderApi.createPaymentUrl(orderId);
         if (paymentRes.data.paymentUrl) {
            window.location.href = paymentRes.data.paymentUrl; 
@@ -208,64 +251,92 @@ const Checkout = () => {
           {step === 1 && (
             <form onSubmit={handleNextStep} className="p-5 md:p-8">
               
-              <h2 className="text-lg font-bold text-gray-800 mb-4">Thông tin khách mua hàng</h2>
-              
-              <div className="flex items-center gap-6 mb-5">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="gender" value="anh" checked={formData.gender === 'anh'} onChange={(e)=>setFormData({...formData, gender: e.target.value})} className="w-4 h-4 text-[#0071e3] accent-[#0071e3]" />
-                  <span className="text-sm font-medium">Anh</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="gender" value="chi" checked={formData.gender === 'chi'} onChange={(e)=>setFormData({...formData, gender: e.target.value})} className="w-4 h-4 text-[#0071e3] accent-[#0071e3]" />
-                  <span className="text-sm font-medium">Chị</span>
-                </label>
-              </div>
+              <h2 className="text-lg font-bold text-gray-800 mb-4">Địa Chỉ Nhận Hàng</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                <input 
-                  type="text" placeholder="Nhập họ tên" required
-                  value={formData.fullname} onChange={(e)=>setFormData({...formData, fullname: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] outline-none transition-colors text-sm"
-                />
-                <input 
-                  type="tel" placeholder="Nhập số điện thoại di động" required
-                  value={formData.phone} onChange={(e)=>setFormData({...formData, phone: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] outline-none transition-colors text-sm"
-                />
-              </div>
+              {/* HIỂN THỊ SỔ ĐỊA CHỈ NẾU CÓ */}
+              {savedAddresses.length > 0 && (
+                <div className="mb-6 space-y-3">
+                  {savedAddresses.map(addr => (
+                    <label key={addr.id} className={`flex items-start p-4 border rounded-xl cursor-pointer transition-all ${selectedAddressId === addr.id ? 'border-[#0071e3] bg-blue-50/30 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
+                      <input type="radio" name="addressSelect" checked={selectedAddressId === addr.id} onChange={() => setSelectedAddressId(addr.id)} className="mt-1 w-4 h-4 text-[#0071e3] accent-[#0071e3]" />
+                      <div className="ml-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-bold text-gray-800">{addr.name}</span>
+                          <span className="text-gray-400 text-sm">|</span>
+                          <span className="text-gray-600 font-medium text-sm">{addr.phone}</span>
+                          {addr.isDefault && <span className="ml-2 text-[10px] border border-[#e30019] text-[#e30019] px-1.5 py-0.5 rounded-sm">Mặc định</span>}
+                          {addr.type && <span className="ml-1 text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-sm">{addr.type}</span>}
+                        </div>
+                        <p className="text-sm text-gray-500">{addr.fullAddress}</p>
+                      </div>
+                    </label>
+                  ))}
 
-              <h2 className="text-lg font-bold text-gray-800 mb-4">Chọn cách nhận hàng</h2>
-              <div className="flex items-center gap-2 mb-4">
-                 <input type="radio" checked readOnly className="w-4 h-4 text-[#0071e3] accent-[#0071e3]" />
-                 <span className="text-sm font-medium">Giao hàng tận nơi</span>
-              </div>
-
-              <div className="bg-gray-50 p-4 md:p-5 rounded-xl border border-gray-100 mb-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  {/* Tỉnh/Thành phố */}
-                  <select required value={formData.province} onChange={handleProvinceChange} className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3]">
-                    <option value="">Chọn Tỉnh, Thành phố</option>
-                    {provinces.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}
-                  </select>
-
-                  {/* Quận/Huyện */}
-                  <select required value={formData.district} onChange={handleDistrictChange} disabled={!formData.province} className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3] disabled:bg-gray-100 disabled:cursor-not-allowed">
-                    <option value="">Chọn Quận, Huyện</option>
-                    {districts.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}
-                  </select>
-
-                  {/* Phường/Xã */}
-                  <select required value={formData.ward} onChange={handleWardChange} disabled={!formData.district} className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3] disabled:bg-gray-100 disabled:cursor-not-allowed">
-                    <option value="">Chọn Phường, Xã</option>
-                    {wards.map(w => <option key={w.code} value={w.code}>{w.name}</option>)}
-                  </select>
-
-                  {/* Số nhà, tên đường */}
-                  <input type="text" required placeholder="Số nhà, tên đường" value={formData.street} onChange={(e)=>setFormData({...formData, street: e.target.value})} className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3]" />
+                  {/* Nút chọn nhập địa chỉ khác */}
+                  <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${selectedAddressId === 'new' ? 'border-[#0071e3] bg-blue-50/30 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
+                    <input type="radio" name="addressSelect" checked={selectedAddressId === 'new'} onChange={() => setSelectedAddressId('new')} className="w-4 h-4 text-[#0071e3] accent-[#0071e3]" />
+                    <span className="ml-3 font-bold text-gray-800">Giao đến địa chỉ khác...</span>
+                  </label>
                 </div>
+              )}
 
-                <input type="text" placeholder="Lưu ý, yêu cầu khác (Không bắt buộc)" value={formData.note} onChange={(e)=>setFormData({...formData, note: e.target.value})} className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3]" />
-              </div>
+              {/* FORM NHẬP TAY (Chỉ hiện khi ko có địa chỉ hoặc chọn Nhập mới) */}
+              {selectedAddressId === 'new' && (
+                <div className="bg-gray-50 p-4 md:p-5 rounded-xl border border-gray-200 mb-6 animate-in fade-in slide-in-from-top-2">
+                  <h3 className="font-bold text-gray-700 mb-4">Thông tin người nhận</h3>
+                  
+                  <div className="flex items-center gap-6 mb-5">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="gender" value="anh" checked={formData.gender === 'anh'} onChange={(e)=>setFormData({...formData, gender: e.target.value})} className="w-4 h-4 text-[#0071e3] accent-[#0071e3]" />
+                      <span className="text-sm font-medium">Anh</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="gender" value="chi" checked={formData.gender === 'chi'} onChange={(e)=>setFormData({...formData, gender: e.target.value})} className="w-4 h-4 text-[#0071e3] accent-[#0071e3]" />
+                      <span className="text-sm font-medium">Chị</span>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <input 
+                      type="text" placeholder="Nhập họ tên" required
+                      value={formData.fullname} onChange={(e)=>setFormData({...formData, fullname: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] outline-none transition-colors text-sm"
+                    />
+                    <input 
+                      type="tel" placeholder="Nhập số điện thoại di động" required
+                      value={formData.phone} onChange={(e)=>setFormData({...formData, phone: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#0071e3] focus:ring-1 focus:ring-[#0071e3] outline-none transition-colors text-sm"
+                    />
+                  </div>
+
+                  <h3 className="font-bold text-gray-700 mb-4">Địa chỉ giao hàng</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Tỉnh/Thành phố */}
+                    <select required value={formData.province} onChange={handleProvinceChange} className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3]">
+                      <option value="">Chọn Tỉnh, Thành phố</option>
+                      {provinces.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}
+                    </select>
+
+                    {/* Quận/Huyện */}
+                    <select required value={formData.district} onChange={handleDistrictChange} disabled={!formData.province} className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3] disabled:bg-gray-100 disabled:cursor-not-allowed">
+                      <option value="">Chọn Quận, Huyện</option>
+                      {districts.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}
+                    </select>
+
+                    {/* Phường/Xã */}
+                    <select required value={formData.ward} onChange={handleWardChange} disabled={!formData.district} className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3] disabled:bg-gray-100 disabled:cursor-not-allowed">
+                      <option value="">Chọn Phường, Xã</option>
+                      {wards.map(w => <option key={w.code} value={w.code}>{w.name}</option>)}
+                    </select>
+
+                    {/* Số nhà, tên đường */}
+                    <input type="text" required placeholder="Số nhà, tên đường" value={formData.street} onChange={(e)=>setFormData({...formData, street: e.target.value})} className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3]" />
+                  </div>
+                </div>
+              )}
+
+              {/* Ô Nhập ghi chú */}
+              <input type="text" placeholder="Lưu ý, yêu cầu khác (Không bắt buộc)" value={formData.note} onChange={(e)=>setFormData({...formData, note: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3] mb-6" />
 
               <div className="border-t border-gray-200 mt-6 pt-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
                 <span className="font-bold text-gray-800 text-lg">Tổng tiền:</span>

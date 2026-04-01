@@ -21,6 +21,7 @@ const Cart = () => {
     );
   }
 
+  // Hàm hỗ trợ lấy URL ảnh từ backend, có xử lý trường hợp đường dẫn khác nhau
   const getImageUrl = (img) => {
     if (!img) return 'https://via.placeholder.com/150';
     if (img.startsWith('http')) return img;
@@ -37,6 +38,7 @@ const Cart = () => {
     return total + (priceToUse * item.quantity);
   }, 0);
 
+  // 1. Hàm Thêm vào giỏ (đã được chuyển sang AppContext)
   if (cart.length === 0) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center bg-gray-50">

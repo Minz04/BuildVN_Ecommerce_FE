@@ -9,7 +9,7 @@ const Footer = () => {
         {/* Grid chia 4 cột */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           
-          {/* CỘT 1: VỀ CHÚNG TÔI */}
+          {/* Cột 1 */}
           <div>
             <h3 className="text-lg font-black text-gray-900 uppercase mb-6 tracking-wide">Về TTGSHOP</h3>
             <ul className="flex flex-col space-y-3">
@@ -31,7 +31,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* CỘT 2: CHÍNH SÁCH */}
+          {/* Cột 2: CHÍNH SÁCH */}
           <div>
             <h3 className="text-lg font-black text-gray-900 uppercase mb-6 tracking-wide">Chính sách</h3>
             <ul className="flex flex-col space-y-3">
@@ -53,7 +53,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* CỘT 3: THÔNG TIN */}
+          {/* Cột 3: THÔNG TIN */}
           <div>
             <h3 className="text-lg font-black text-gray-900 uppercase mb-6 tracking-wide">Thông tin</h3>
             <ul className="flex flex-col space-y-3">
@@ -85,7 +85,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* CỘT 4: TỔNG ĐÀI HỖ TRỢ */}
+          {/* Cột 4: TỔNG ĐÀI HỖ TRỢ */}
           <div>
             <h3 className="text-lg font-black text-gray-900 uppercase mb-6 tracking-wide">
               Tổng đài hỗ trợ <span className="text-[13px] font-medium text-gray-400 lowercase ml-1">(9:00 - 21:30)</span>
