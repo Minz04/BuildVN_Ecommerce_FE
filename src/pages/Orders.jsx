@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { AppContext } from '../context/AppContext';
 import { orderApi } from '../services/orderApi';
 
-// Danh sách các Tab (Khớp với Enum trong Database của bạn)
+// Danh sách các Tab 
 const TABS = [
   { id: '', label: 'Tất cả' },
   { id: 'PENDING', label: 'Chờ thanh toán' },

@@ -358,15 +358,6 @@ const Checkout = () => {
               </h2>
 
               <div className="space-y-4 mb-8">
-                {/* Thanh toán COD */}
-                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'COD' ? 'border-[#0071e3] bg-blue-50/50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
-                  <input type="radio" name="payment" value="COD" checked={paymentMethod === 'COD'} onChange={() => setPaymentMethod('COD')} className="w-5 h-5 text-[#0071e3] accent-[#0071e3]" />
-                  <div className="ml-4">
-                    <h4 className="font-bold text-gray-800">Thanh toán khi nhận hàng (COD)</h4>
-                    <p className="text-sm text-gray-500">Khách hàng thanh toán bằng tiền mặt khi shipper giao hàng tới.</p>
-                  </div>
-                </label>
-
                 {/* Thanh toán VNPAY */}
                 <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'VNPAY' ? 'border-[#0071e3] bg-blue-50/50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
                   <input type="radio" name="payment" value="VNPAY" checked={paymentMethod === 'VNPAY'} onChange={() => setPaymentMethod('VNPAY')} className="w-5 h-5 text-[#0071e3] accent-[#0071e3]" />
