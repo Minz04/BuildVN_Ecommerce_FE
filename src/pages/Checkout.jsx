@@ -9,24 +9,31 @@ import { orderApi } from '../services/orderApi';
 const Checkout = () => {
   const { cart, user, setCart } = useContext(AppContext);
   const navigate = useNavigate();
-
+  
   // Bảo vệ routes
   useEffect(() => {
     if (!user) navigate('/login');
     if (cart.length === 0) navigate('/cart');
   }, [user, cart, navigate]);
 
+  useEffect(() => {
+    axios.get('http://localhost:3000/api/coupons', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    }).then(res => setAvailableCoupons(res.data));
+  }, []);
+
   // State điều hướng bước thanh toán
   const [step, setStep] = useState(1); // 1: Thông tin, 2: Thanh toán
   const [isLoading, setIsLoading] = useState(false);
-
+  
   // State địa chỉ
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState('new');
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
-
+  
+  
   const [formData, setFormData] = useState({
     gender: 'anh',
     fullname: user?.fullname || user?.email || '',
@@ -41,13 +48,34 @@ const Checkout = () => {
     note: ''
   });
 
+  
+  
   const [paymentMethod, setPaymentMethod] = useState('COD');
-
+  
   // TÍNH TỔNG TIỀN
   const totalPrice = cart.reduce((total, item) => {
     if (!item.computer) return total;
     return total + (item.computer.price * item.quantity);
   }, 0);
+  
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
+
+  const calculateDiscount = (coupon) => {
+    if (!coupon) return 0;
+    if (coupon.discountType === 'FIXED') return coupon.discountValue;
+    if (coupon.discountType === 'PERCENTAGE') {
+        let discount = totalPrice * (coupon.discountValue / 100);
+        if (coupon.maxDiscountAmount && discount > coupon.maxDiscountAmount) {
+            return coupon.maxDiscountAmount;
+        }
+        return discount;
+    }
+    return 0;
+  };
+  
+  const discountAmount = calculateDiscount(selectedCoupon);
+  const finalPrice = totalPrice - discountAmount;
 
   // LẤY DỮ LIỆU TỈNH THÀNH KHI LOAD TRANG
   useEffect(() => {
@@ -56,6 +84,8 @@ const Checkout = () => {
       .catch(err => console.error("Lỗi tải API Địa chỉ:", err));
   }, []);
 
+  
+  
   // Nếu user đã có địa chỉ hiển thị lựa chọn địa chỉ đã lưu hoặc nhập mới
   useEffect(() => {
     if (user && user.address) {
@@ -82,7 +112,7 @@ const Checkout = () => {
       }
     }
   }, [user]);
-
+  
   // XỬ LÝ KHI CHỌN TỈNH -> TẢI HUYỆN
   const handleProvinceChange = (e) => {
     const provinceCode = e.target.value;
@@ -167,10 +197,11 @@ const Checkout = () => {
         finalPhone = formData.phone;
       }
 
-      // GỌI API BACKEND VỚI ĐỊA CHỈ CUỐI CÙNG
       const res = await orderApi.createOrder({
         shippingAddress: finalAddress,
-        phone: finalPhone
+        phone: finalPhone,
+        couponCode: selectedCoupon ? selectedCoupon.code : null,
+        discountAmount: selectedCoupon ? calculateDiscount(selectedCoupon) : 0
       });
 
       const orderId = res.data.orderId;
@@ -350,14 +381,79 @@ const Checkout = () => {
             </form>
           )}
 
-          {/* Bước 2: CHỌN PHƯƠNG THỨC THANH TOÁN */}
+          {/* Bước 2: CHỌN MÃ GIẢM GIÁ VÀ PHƯƠNG THỨC THANH TOÁN */}
           {step === 2 && (
             <div className="p-5 md:p-8">
+              
+              {/* --- DANH SÁCH MÃ GIẢM GIÁ --- */}
+              <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                Mã giảm giá của bạn
+              </h2>
+              <div className="mb-8">
+                {availableCoupons.length === 0 ? (
+                  <p className="text-sm text-gray-500 italic p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    Chưa có mã giảm giá nào khả dụng cho đơn hàng này.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {availableCoupons.map(coupon => {
+                      // Kiểm tra xem đơn hàng có đủ điều kiện dùng mã này không
+                      const isEligible = totalPrice >= coupon.minOrderValue;
+
+                      return (
+                        <label 
+                          key={coupon._id} 
+                          className={`flex items-start p-4 border rounded-xl transition-all ${
+                            !isEligible ? 'opacity-60 cursor-not-allowed border-gray-200 bg-gray-50' 
+                            : selectedCoupon?._id === coupon._id ? 'border-[#0071e3] bg-blue-50/50 shadow-sm cursor-pointer' 
+                            : 'border-gray-200 hover:bg-gray-50 cursor-pointer'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="couponSelect"
+                            disabled={!isEligible}
+                            checked={selectedCoupon?._id === coupon._id}
+                            onChange={() => setSelectedCoupon(coupon)}
+                            className="mt-1 w-4 h-4 text-[#0071e3] accent-[#0071e3] disabled:cursor-not-allowed"
+                          />
+                          <div className="ml-3 flex-1">
+                            <div className="flex justify-between items-start">
+                              <span className="font-bold text-gray-800 uppercase bg-white border border-gray-200 px-2 py-0.5 rounded text-sm shadow-sm">
+                                {coupon.code}
+                              </span>
+                              <span className="text-[#e30019] font-bold text-sm">
+                                {coupon.discountType === 'FIXED' 
+                                  ? `- ${coupon.discountValue.toLocaleString('vi-VN')}đ` 
+                                  : `- ${coupon.discountValue}%`}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1.5">
+                              Đơn tối thiểu {coupon.minOrderValue.toLocaleString('vi-VN')}đ
+                              {coupon.maxDiscountAmount ? `. Giảm tối đa ${coupon.maxDiscountAmount.toLocaleString('vi-VN')}đ` : ''}
+                            </p>
+                            {!isEligible && (
+                              <p className="text-xs text-red-500 mt-1">Mua thêm {(coupon.minOrderValue - totalPrice).toLocaleString('vi-VN')}đ để sử dụng mã này.</p>
+                            )}
+                          </div>
+                        </label>
+                      );
+                    })}
+                    {selectedCoupon && (
+                      <button onClick={() => setSelectedCoupon(null)} className="text-sm text-red-500 hover:underline mt-2 font-medium">
+                        Bỏ chọn mã
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* --- PHƯƠNG THỨC THANH TOÁN --- */}
               <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <CreditCard className="text-[#0071e3]" /> Chọn phương thức thanh toán
               </h2>
 
-              <div className="space-y-4 mb-8">
+              <div className="space-y-4 mb-8"> 
                 {/* Thanh toán VNPAY */}
                 <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'VNPAY' ? 'border-[#0071e3] bg-blue-50/50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
                   <input type="radio" name="payment" value="VNPAY" checked={paymentMethod === 'VNPAY'} onChange={() => setPaymentMethod('VNPAY')} className="w-5 h-5 text-[#0071e3] accent-[#0071e3]" />
@@ -371,9 +467,24 @@ const Checkout = () => {
                 </label>
               </div>
 
-              <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                <span className="font-bold text-gray-800">Tổng thanh toán:</span>
-                <span className="text-3xl font-black text-[#e30019]">{totalPrice.toLocaleString('vi-VN')}<span className="underline ml-1">đ</span></span>
+              {/* --- TỔNG KẾT TIỀN (Đã tích hợp biến finalPrice) --- */}
+              <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 mb-6 flex flex-col gap-3">
+                <div className="flex justify-between items-center text-gray-600 font-medium">
+                  <span>Tạm tính:</span>
+                  <span>{totalPrice.toLocaleString('vi-VN')} đ</span>
+                </div>
+                
+                {selectedCoupon && (
+                  <div className="flex justify-between items-center text-green-600 font-medium">
+                    <span>Mã giảm giá ({selectedCoupon.code}):</span>
+                    <span>- {discountAmount.toLocaleString('vi-VN')} đ</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center border-t border-gray-200 mt-2 pt-4">
+                  <span className="font-bold text-gray-800 text-lg">Tổng thanh toán:</span>
+                  <span className="text-3xl font-black text-[#e30019]">{finalPrice.toLocaleString('vi-VN')}<span className="underline ml-1">đ</span></span>
+                </div>
               </div>
 
               <button 

@@ -1,12 +1,15 @@
-import React, { useContext } from 'react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, ArrowLeft, ShieldCheck, AlertCircle } from 'lucide-react';
+
 import { AppContext } from '../context/AppContext';
 
 const Cart = () => {
   const { cart, updateQuantity, removeFromCart, user } = useContext(AppContext);
   const navigate = useNavigate();
-
+  
   // Yêu cầu đăng nhập mới được xem giỏ
   if (!user) {
     return (
@@ -21,6 +24,34 @@ const Cart = () => {
     );
   }
 
+  
+  // Tính tổng tiền dựa trên cấu trúc DB mới (item.computer.price)
+  const totalPrice = cart.reduce((total, item) => {
+    if (!item.computer) return total;
+    const priceToUse = item.computer.price;
+    return total + (priceToUse * item.quantity);
+  }, 0);
+
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+
+  const finalPrice = appliedCoupon ? totalPrice - appliedCoupon.discountAmount : totalPrice;
+  
+  const handleApplyCoupon = async () => {
+    try {
+        const res = await axios.post('http://localhost:3000/api/coupons/apply', 
+            { code: couponInput, orderValue: totalPrice },
+            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        setAppliedCoupon(res.data);
+        toast.success("Áp dụng mã thành công!");
+    } catch (error) {
+        toast.error(error.response?.data?.message || "Mã không hợp lệ");
+        setAppliedCoupon(null);
+    }
+  };
+
+  
   // Hàm hỗ trợ lấy URL ảnh từ backend, có xử lý trường hợp đường dẫn khác nhau
   const getImageUrl = (img) => {
     if (!img) return 'https://via.placeholder.com/150';
@@ -30,13 +61,7 @@ const Cart = () => {
     if (img.startsWith('/')) return `${BASE_URL}/images${img}`;
     return `${BASE_URL}/images/${img}`;
   };
-
-  // Tính tổng tiền dựa trên cấu trúc DB mới (item.computer.price)
-  const totalPrice = cart.reduce((total, item) => {
-    if (!item.computer) return total;
-    const priceToUse = item.computer.price;
-    return total + (priceToUse * item.quantity);
-  }, 0);
+  
 
   // 1. Hàm Thêm vào giỏ (đã được chuyển sang AppContext)
   if (cart.length === 0) {
@@ -123,9 +148,30 @@ const Cart = () => {
                 <span className="text-green-600 font-bold">Miễn phí</span>
               </div>
 
+              <div className="mt-4 p-4">
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    placeholder="Nhập mã giảm giá..." 
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value)}
+                    className="flex-1 border rounded px-3 py-2 text-sm outline-none focus:border-cyan-500"
+                  />
+                  <button onClick={handleApplyCoupon} className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-4 py-2 rounded cursor-pointer text-sm font-bold">
+                    ÁP DỤNG
+                  </button> 
+                </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between mb-4 text-green-600 font-medium">
+                    <span>Giảm giá:</span>
+                    <span>- {appliedCoupon.discountAmount.toLocaleString('vi-VN')} đ</span>
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-between items-end mb-8">
                 <span className="font-bold text-gray-800">Tổng cộng:</span>
-                <span className="text-3xl font-black text-[#e30019]">{totalPrice.toLocaleString('vi-VN')} <span className="text-xl underline">đ</span></span>
+                <span className="text-3xl font-black text-[#e30019]">{finalPrice.toLocaleString('vi-VN')} <span className="text-xl underline">đ</span></span>
               </div>
 
               <button 
