@@ -30,7 +30,7 @@ const Category = () => {
         if (currentCategory) {
           setCategory(currentCategory);
           const filteredProducts = prodRes.data.filter(p => {
-            const pCatId = typeof p.category === 'object' ? p.category._id : p.category;
+            const pCatId = p.category?._id || p.category;
             return pCatId === currentCategory._id;
           });
           setProducts(filteredProducts);

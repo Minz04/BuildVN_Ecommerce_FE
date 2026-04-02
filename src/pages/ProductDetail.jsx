@@ -42,19 +42,17 @@ const ProductDetail = () => {
           const fetchedProduct = res.data;
           setProduct(fetchedProduct);
           setQuantity(1); 
-          setActiveImg(0); 
+          setActiveImg(0);  
 
           // 2. Lấy sản phẩm liên quan dựa trên category của sản phẩm chính
-          const categoryId = typeof fetchedProduct.category === 'object' 
-                                ? fetchedProduct.category._id 
-                                : fetchedProduct.category;
+          const categoryId = fetchedProduct.category?._id || fetchedProduct.category;
 
           // Nếu có categoryId, mới gọi API lấy sản phẩm liên quan
           if (categoryId) {
             try {
                 const allProductsRes = await productApi.getAllProducts();
                 const filtered = allProductsRes.data.filter(p => {
-                    const pCatId = typeof p.category === 'object' ? p.category._id : p.category;
+                    const pCatId = p.category?._id || p.category;
                     return pCatId === categoryId && p._id !== fetchedProduct._id;
                 });
                 
