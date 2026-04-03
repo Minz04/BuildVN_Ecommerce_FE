@@ -74,6 +74,10 @@ const Home = () => {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // GỌI API LẤY DỮ LIỆU SẢN PHẨM, DANH MỤC VÀ BANNER
   useEffect(() => {
     const fetchHomeData = async () => {

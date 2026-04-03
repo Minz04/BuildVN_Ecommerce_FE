@@ -53,7 +53,7 @@ const Navbar = () => {
   // FETCH VÀ LẮNG NGHE THÔNG BÁO QUA SOCKET
   useEffect(() => {
     if (user) {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       // 1. Lấy thông báo cũ từ Database
       axios.get('http://localhost:3000/api/notifications', { headers: { Authorization: `Bearer ${token}` } })
         .then(res => setNotifications(res.data))
@@ -90,7 +90,9 @@ const Navbar = () => {
   };
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 120);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 80); 
+    };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
