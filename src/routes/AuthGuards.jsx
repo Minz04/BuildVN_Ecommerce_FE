@@ -2,28 +2,28 @@ import React, { useContext } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 
-// 1. BẢO VỆ TRANG RIÊNG TƯ (Chỉ user đã đăng nhập mới được vào)
+// Chỉ những user đã đăng nhập mới được vào
 export const ProtectedRoute = () => {
   const { user } = useContext(AppContext);
-  
-  // Nếu chưa đăng nhập -> Đá văng về trang Login
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  // Nếu đã đăng nhập -> Cho phép đi tiếp (Render các Component con)
+  if (!user) return <Navigate to="/login" replace />;
   return <Outlet />;
 };
 
-// 2. BẢO VỆ TRANG ĐĂNG NHẬP/ĐĂNG KÝ (Đã đăng nhập rồi thì không cho vào nữa)
+// Chỉ những user chưa đăng nhập mới được vào
 export const GuestRoute = () => {
   const { user } = useContext(AppContext);
+  if (user) return <Navigate to="/" replace />;
+  return <Outlet />;
+};
+
+// Chỉ admin mới được vào
+export const AdminRoute = () => {
+  const { user } = useContext(AppContext);
   
-  // Nếu đã đăng nhập -> Đá thẳng về Trang chủ
-  if (user) {
-    return <Navigate to="/" replace />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== 'admin') {
+    return <Navigate to="/" replace />; 
   }
   
-  // Nếu chưa đăng nhập -> Cho phép vào trang Login/Register
   return <Outlet />;
 };

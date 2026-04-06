@@ -1,9 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios'; // Import thêm axios
 import { Truck, RefreshCcw, CreditCard, Headphones, MapPin, Phone, Mail, Map } from 'lucide-react';
-import { mockShowrooms } from '../mock/storeData';
 
 const Store_address = () => {
-  const [showrooms, setShowrooms] = useState(mockShowrooms);
+  // Đổi giá trị khởi tạo thành mảng rỗng
+  const [showrooms, setShowrooms] = useState([]);
+
+  // Gọi API lấy danh sách showroom khi trang vừa load
+  useEffect(() => {
+    const fetchStores = async () => {
+      try {
+        const res = await axios.get('http://localhost:3000/api/stores');
+        setShowrooms(res.data);
+      } catch (error) {
+        console.error("Lỗi khi tải danh sách cửa hàng:", error);
+      }
+    };
+    fetchStores();
+  }, []);
 
   return (
     <div className="w-full">
@@ -89,46 +103,50 @@ const Store_address = () => {
             <div className="w-24 h-1 bg-cyan-500 mx-auto mt-4 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.5)]"></div>
           </div>
 
-          {/* Grid showroom */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {showrooms.map((room) => (
-              <div key={room.id} className="bg-slate-800/80 backdrop-blur-sm border border-slate-700 rounded-2xl p-7 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.1)] transition-all duration-300 flex flex-col gap-5">
+            {showrooms.length === 0 ? (
+              <p className="text-center text-gray-400 col-span-2">Đang tải danh sách cửa hàng...</p>
+            ) : (
+              showrooms.map((room) => (
+                <div key={room._id} className="bg-slate-800/80 backdrop-blur-sm border border-slate-700 rounded-2xl p-7 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.1)] transition-all duration-300 flex flex-col gap-5">
 
-                {/* Header showroom đơn giản, sang trọng */}
-                <h3 className="font-bold text-[18px] uppercase text-cyan-400 border-b border-slate-700 pb-3">
-                  {room.name}
-                </h3>
+                  {/* Header showroom đơn giản, sang trọng */}
+                  <h3 className="font-bold text-[18px] uppercase text-cyan-400 border-b border-slate-700 pb-3">
+                    {room.name}
+                  </h3>
 
-                {/* Thông tin */}
-                <ul className="space-y-4 text-[15px] text-gray-300">
-                  <li className="flex gap-3 items-start">
-                    <MapPin size={18} className="text-cyan-500 flex-shrink-0 mt-0.5" />
-                    <span className="leading-snug">Địa chỉ: {room.address}</span>
-                  </li>
+                  <ul className="space-y-4 text-[15px] text-gray-300">
+                    <li className="flex gap-3 items-start">
+                      <MapPin size={18} className="text-cyan-500 flex-shrink-0 mt-0.5" />
+                      <span className="leading-snug">Địa chỉ: {room.address}</span>
+                    </li>
 
-                  <li className="flex gap-3 items-start">
-                    <Phone size={18} className="text-cyan-500 flex-shrink-0 mt-0.5" />
-                    <span>Số điện thoại: <span className="text-white font-medium">{room.phone}</span></span>
-                  </li>
+                    <li className="flex gap-3 items-start">
+                      <Phone size={18} className="text-cyan-500 flex-shrink-0 mt-0.5" />
+                      <span>Số điện thoại: <span className="text-white font-medium">{room.phone}</span></span>
+                    </li>
 
-                  <li className="flex gap-3 items-start">
-                    <Mail size={18} className="text-cyan-500 flex-shrink-0 mt-0.5" />
-                    <span>Email: {room.email}</span>
-                  </li>
+                    <li className="flex gap-3 items-start">
+                      <Mail size={18} className="text-cyan-500 flex-shrink-0 mt-0.5" />
+                      <span>Email: {room.email}</span>
+                    </li>
 
-                  <li className="flex gap-3 items-center pt-2">
-                    <Map size={18} className="text-cyan-500 flex-shrink-0" />
-                    <a
-                      href={room.mapLink}
-                      className="text-cyan-400 font-semibold hover:text-cyan-300 hover:underline underline-offset-4 transition-colors"
-                    >
-                      Xem bản đồ đường đi &rarr;
-                    </a>
-                  </li>
-                </ul>
+                    <li className="flex gap-3 items-center pt-2">
+                      <Map size={18} className="text-cyan-500 flex-shrink-0" />
+                      <a
+                        href={room.mapLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-400 font-semibold hover:text-cyan-300 hover:underline underline-offset-4 transition-colors"
+                      >
+                        Xem bản đồ đường đi &rarr;
+                      </a>
+                    </li>
+                  </ul>
 
-              </div>
-            ))}
+                </div>
+              ))
+            )}
           </div>
 
         </div>

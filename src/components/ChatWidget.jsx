@@ -32,8 +32,10 @@ const ChatWidget = () => {
     scrollToBottom();
   }, [messages, isChatOpen, chatProduct]);
 
+  // SỬA LẠI ĐOẠN NÀY: Giữ Socket luôn kết nối dù đóng hay mở khung chat
   useEffect(() => {
-    if (isChatOpen && user) {
+    // Chỉ kết nối khi có user đăng nhập, và user KHÔNG PHẢI là admin
+    if (user && user.role !== 'admin' && user.role?.name !== 'admin') {
       socketRef.current = io("http://localhost:3000");
 
       const initChat = async () => {
@@ -45,7 +47,8 @@ const ChatWidget = () => {
           socketRef.current.emit("join_chat", currentChatId);
 
           const msgRes = await chatApi.getMessages(currentChatId);
-          setMessages(msgRes.data.message || []);
+          // FIX LỖI SỐ 1: Đổi .message thành .messages (có s) để lấy được lịch sử
+          setMessages(msgRes.data.messages || []);
         } catch (error) {
           console.error("Lỗi khởi tạo chat:", error);
         } finally {
@@ -56,9 +59,13 @@ const ChatWidget = () => {
       initChat();
 
       socketRef.current.on("receive_message", (data) => {
-        setMessages((prev) => [...prev, data]);
+        // FIX LỖI SỐ 2: Chống nhân đôi tin nhắn bên phía User
+        setMessages((prev) => {
+           if (prev.some(m => m._id === data._id)) return prev;
+           return [...prev, data];
+        });
 
-        // Nếu chat đang đóng, tăng số lượng tin nhắn chưa đọc
+        // Báo số đỏ (Unread Count) hoạt động cực mượt vì Socket không bị ngắt nữa
         if (!isChatOpenRef.current) {
           setUnreadCount((prev) => prev + 1);
         }
@@ -68,7 +75,7 @@ const ChatWidget = () => {
         socketRef.current.disconnect();
       };
     }
-  }, [isChatOpen, user]);
+  }, [user]); // Bỏ isChatOpen ra khỏi danh sách theo dõi
 
   // HÀM XỬ LÝ ẢNH
   const getImageUrl = (img) => {
@@ -124,6 +131,10 @@ const ChatWidget = () => {
   };
 
   if (!user) return null; 
+  
+  if (user.role === 'admin' || user.role?.name === 'admin') {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end">

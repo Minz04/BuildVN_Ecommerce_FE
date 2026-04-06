@@ -126,7 +126,7 @@ const OrderDetail = () => {
             <ChevronLeft size={18} /> Trở lại
           </Link>
           <div className="text-sm font-medium">
-            MÃ ĐƠN HÀNG. <span className="font-bold">{order._id.toUpperCase()}</span> | <span className={`uppercase font-bold ${isCancelled ? 'text-red-500' : 'text-[#26aa99]'}`}>
+            MÃ ĐƠN HÀNG. <span className="font-bold">#{order._id.substring(16).toUpperCase()}</span> | <span className={`uppercase font-bold ${isCancelled ? 'text-red-500' : 'text-[#26aa99]'}`}>
               {isCancelled ? 'ĐƠN HÀNG ĐÃ HỦY' : (order.status === 'DELIVERED' ? 'ĐƠN HÀNG ĐÃ HOÀN THÀNH' : 'ĐƠN HÀNG ĐANG XỬ LÝ')}
             </span>
           </div>

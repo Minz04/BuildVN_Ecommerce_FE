@@ -72,21 +72,35 @@ const Navbar = () => {
     }
   }, [user]);
 
-  // HÀM XỬ LÝ ĐỌC THÔNG BÁO
+  // Đọc thông báo 
   const markAsRead = async (id, link) => {
+    setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+    setShowNotif(false); 
+    if (link) navigate(link); 
+
     try {
-      await axios.put(`http://localhost:3000/api/notifications/${id}/read`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
-      setShowNotif(false);
-      if (link) navigate(link);
-    } catch (err) { console.log(err); }
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      await axios.put(`http://localhost:3000/api/notifications/${id}/read`, {}, { 
+          headers: { Authorization: `Bearer ${token}` } 
+      });
+    } catch (err) { 
+        console.log("Lỗi đồng bộ thông báo với Server:", err); 
+    }
   };
 
-  const markAllAsRead = async () => {
+  // Đánh dấu đã đọc tất cả thông báo
+  const markAllAsRead = async (e) => {
+    if(e) e.stopPropagation(); 
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    
     try {
-      await axios.put(`http://localhost:3000/api/notifications/read-all`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-    } catch (err) { console.log(err); }
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      await axios.put(`http://localhost:3000/api/notifications/read-all`, {}, { 
+          headers: { Authorization: `Bearer ${token}` } 
+      });
+    } catch (err) { 
+        console.log("Lỗi đồng bộ đọc tất cả với Server:", err); 
+    }
   };
 
   useEffect(() => {
@@ -147,9 +161,7 @@ const Navbar = () => {
 
         <div className="flex items-center gap-5">
           
-          {/* ============================================== */}
-          {/* CHUÔNG THÔNG BÁO (THAY THẾ HOTLINE Ở ĐÂY) */}
-          {/* ============================================== */}
+          {/* Chuông thông báo*/}
           <div className="relative group cursor-pointer flex items-center" ref={notifRef}>
             <div onClick={() => setShowNotif(!showNotif)} className={`p-2.5 rounded-full transition-colors duration-300 relative ${showNotif ? 'bg-cyan-50 text-cyan-600' : 'bg-gray-100 text-gray-500 hover:bg-cyan-50 hover:text-cyan-600'}`}>
               <Bell size={20} />
@@ -184,7 +196,6 @@ const Navbar = () => {
               </div>
             )}
           </div>
-          {/* ============================================== */}
 
           <Link to="/wishlist" className="flex items-center gap-3 group">
             <div className="p-2.5 bg-gray-100 group-hover:bg-cyan-50 text-gray-500 group-hover:text-cyan-600 rounded-full relative transition-colors duration-300">
@@ -203,31 +214,55 @@ const Navbar = () => {
           </Link>
 
           {user ? (
-            <div className="relative group cursor-pointer flex items-center gap-3 pl-2 border-l border-gray-200">
+              <div className="relative group cursor-pointer flex items-center gap-3 pl-2 border-l border-gray-200">
               <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0">
-                <img src={!user?.avatar ? 'https://i.pinimg.com/736x/c6/e5/65/c6e56503cfdd87da299f72dc416023d4.jpg' : user.avatar.startsWith('http') ? user.avatar : `http://localhost:3000${user.avatar}`} alt="Avatar" className="w-full h-full object-cover"/>
+                <img 
+                  src={!user?.avatar ? 'https://i.pinimg.com/736x/c6/e5/65/c6e56503cfdd87da299f72dc416023d4.jpg' : user.avatar.startsWith('http') ? user.avatar : `http://localhost:3000${user.avatar}`} 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="text-[14px] hidden lg:block">
                 <p className="text-gray-500 font-medium leading-tight text-xs">Xin chào,</p>
-                <p className="font-black text-gray-800 line-clamp-1 max-w-[100px] group-hover:text-cyan-600 transition-colors">{user.fullname || user.email}</p>
+                <p className="font-black text-gray-800 line-clamp-1 max-w-[100px] group-hover:text-cyan-600 transition-colors">
+                  {user.fullname || user.email}
+                </p>
               </div>
+              
+              {/* MENU DROPDOWN */}
               <div className="absolute top-full right-0 mt-2 w-48 bg-white shadow-lg border border-gray-100 rounded-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                          
+                {/* HIỂN THỊ NÚT ADMIN NẾU ROLE LÀ ADMIN */}
+                {user.role === 'admin' && (
+                  <div className="px-2 pb-1 mb-1 border-b border-gray-100">
+                    <Link 
+                      to="/admin" 
+                      className="block w-full text-center px-4 py-2 text-sm text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 font-bold rounded shadow-sm"
+                    >
+                      Trang Quản Trị
+                    </Link>
+                  </div>
+                )}
+
                 <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-cyan-600 font-semibold">Tài khoản của tôi</Link>
                 <Link to="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-cyan-600 font-semibold">Đơn hàng của tôi</Link>
                 <div className="border-t border-gray-100 my-1"></div>
-                <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-bold flex items-center gap-2"><LogOut size={16} /> Đăng xuất</button>
+                <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-bold flex items-center gap-2">
+                  <LogOut size={16} /> Đăng xuất
+                </button>
               </div>
             </div>
           ) : (
             <Link to="/login" className="flex items-center gap-3 group pl-2 border-l border-gray-200">
-              <div className="p-2.5 bg-gray-100 group-hover:bg-cyan-50 text-gray-500 group-hover:text-cyan-600 rounded-full transition-colors duration-300"><User size={20} /></div>
+              <div className="p-2.5 bg-gray-100 group-hover:bg-cyan-50 text-gray-500 group-hover:text-cyan-600 rounded-full transition-colors duration-300">
+                <User size={20} />
+              </div>
               <div className="text-[14px] hidden lg:block">
                 <p className="text-gray-500 font-medium leading-tight text-xs">Tài khoản</p>
                 <p className="font-black text-gray-800 group-hover:text-cyan-600 transition-colors">Đăng nhập</p>
               </div>
             </Link>
           )}
-
         </div>
       </div>
 

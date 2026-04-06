@@ -9,8 +9,8 @@ import { orderApi } from '../services/orderApi';
 const TABS = [
   { id: '', label: 'Tất cả' },
   { id: 'PENDING', label: 'Chờ thanh toán' },
-  { id: 'CONFIRMED', label: 'Vận chuyển' },
-  { id: 'SHIPPING', label: 'Chờ giao hàng' },
+  { id: 'CONFIRMED', label: 'Chờ giao hàng' },
+  { id: 'SHIPPING', label: 'Vận chuyển' },
   { id: 'DELIVERED', label: 'Hoàn thành' },
   { id: 'CANCELLED', label: 'Đã hủy' }
 ];
@@ -186,7 +186,7 @@ const Orders = () => {
                   {/* Header Đơn hàng */}
                   <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                     <div className="text-xs font-bold text-gray-800 bg-white px-3 py-1.5 rounded shadow-sm border border-gray-200">
-                      Mã đơn: <span className="text-[#0071e3] uppercase">{order._id.substring(order._id.length - 8)}</span>
+                      Mã đơn: <span className="text-[#0071e3] uppercase">#{order._id.substring(16).toUpperCase()}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm font-bold uppercase">
                       <span className={getStatusColor(order.status)}>
@@ -227,32 +227,38 @@ const Orders = () => {
                         <span className="text-sm text-gray-700 font-medium">Thành tiền:</span>
                         <span className="text-xl font-black text-[#e30019]">{order.totalAmount.toLocaleString('vi-VN')} đ</span>
                       </div>
-                      <div className="flex gap-2">
-                        {/* CHỈ CHO PHÉP HỦY KHI ĐƠN ĐANG PENDING HOẶC CONFIRMED */}
-                        {(order.status === 'PENDING' || order.status === 'CONFIRMED') && (
-                          <button 
-                            onClick={() => handleCancelOrder(order._id)}
-                            disabled={cancelingId === order._id}
-                            className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors flex items-center gap-2"
-                          >
-                            {cancelingId === order._id ? <Loader2 size={16} className="animate-spin"/> : 'Hủy đơn hàng'}
-                          </button>
-                        )}
-                        {/* Hiên thị nút mua lại nếu đơn bị hủy */}
+                      <div className="flex flex-col items-end gap-3">
+                        
                         {order.status === 'CANCELLED' && (
-                          <button 
-                            onClick={() => handleBuyAgain(order)}
-                            className="px-5 py-2 border border-[#ee4d2d] text-[#ee4d2d] bg-white hover:bg-red-50 text-sm font-bold rounded transition-colors"
-                          >
-                            Mua lại
-                          </button>
+                          <p className="text-red-500 text-sm font-medium bg-red-50 px-3 py-1 rounded-md border border-red-100">
+                            Lý do hủy: {order.cancelReason || 'Không có lý do cụ thể'}
+                          </p>
                         )}
-                        <Link 
-                          to={`/orders/${order._id}`} 
-                          className="px-6 py-2 bg-[#e30019] hover:bg-red-700 text-white rounded font-medium text-sm transition-colors shadow-sm"
-                        >
-                          Xem chi tiết
-                        </Link>
+                        <div className="flex gap-2">
+                          {(order.status === 'PENDING' || order.status === 'CONFIRMED') && (
+                            <button 
+                              onClick={() => handleCancelOrder(order._id)}
+                              disabled={cancelingId === order._id}
+                              className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors flex items-center gap-2"
+                            >
+                              {cancelingId === order._id ? <Loader2 size={16} className="animate-spin"/> : 'Hủy đơn hàng'}
+                            </button>
+                          )}
+                          {order.status === 'CANCELLED' && (
+                            <button 
+                              onClick={() => handleBuyAgain(order)} 
+                              className="px-5 py-2 border border-[#ee4d2d] text-[#ee4d2d] bg-white hover:bg-red-50 text-sm font-bold rounded transition-colors"
+                            >
+                              Mua lại
+                            </button>
+                          )}
+                          <Link 
+                            to={`/orders/${order._id}`} 
+                            className="px-6 py-2 bg-[#e30019] hover:bg-red-700 text-white rounded font-medium text-sm transition-colors shadow-sm"
+                          >
+                            Xem chi tiết
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>

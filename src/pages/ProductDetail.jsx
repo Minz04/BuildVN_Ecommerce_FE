@@ -22,6 +22,7 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [activeImg, setActiveImg] = useState(0); 
+  const [filterStar, setFilterStar] = useState(0);
   
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
@@ -346,14 +347,32 @@ const ProductDetail = () => {
                 </div>
 
                 <div className="hidden sm:flex flex-wrap gap-3">
-                  <button className="px-5 py-2 border border-[#ee4d2d] text-[#ee4d2d] bg-white rounded-sm text-sm font-medium">Tất cả ({reviews.length})</button>
-                  <button className="px-5 py-2 border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 rounded-sm text-sm font-medium">5 Sao</button>
-                  <button className="px-5 py-2 border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 rounded-sm text-sm font-medium">Có bình luận</button>
+                  <button 
+                    onClick={() => setFilterStar(0)} 
+                    className={`px-5 py-2 border rounded-sm text-sm font-medium ${filterStar === 0 ? 'border-[#ee4d2d] text-[#ee4d2d] bg-white' : 'border-gray-200 text-gray-700 bg-white hover:bg-gray-50'}`}
+                  >
+                    Tất cả ({reviews.length})
+                  </button>
+                  
+                  {[5, 4, 3, 2, 1].map(star => {
+                    const count = reviews.filter(r => r.rating === star).length;
+                    return (
+                      <button 
+                        key={star} 
+                        onClick={() => setFilterStar(star)} 
+                        className={`px-5 py-2 border rounded-sm text-sm font-medium flex items-center gap-1 ${filterStar === star ? 'border-[#ee4d2d] text-[#ee4d2d] bg-white' : 'border-gray-200 text-gray-700 bg-white hover:bg-gray-50'}`}
+                      >
+                        {star} Sao ({count})
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               <div className="space-y-6 divide-y divide-gray-100">
-                {reviews.map(review => (
+                {reviews
+                  .filter(review => filterStar === 0 || review.rating === filterStar) // Logic lọc ở đây
+                  .map(review => (
                   <div key={review._id} className="pt-6 first:pt-0 flex gap-4">
                     <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-200 shrink-0">
                       <img 

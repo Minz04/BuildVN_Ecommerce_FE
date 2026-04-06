@@ -9,6 +9,7 @@ import { orderApi } from '../services/orderApi';
 const Checkout = () => {
   const { cart, user, setCart } = useContext(AppContext);
   const navigate = useNavigate();
+  const [paymentMethod, setPaymentMethod] = useState('VNPAY');
   
   // Bảo vệ routes
   useEffect(() => {
@@ -17,9 +18,15 @@ const Checkout = () => {
   }, [user, cart, navigate]);
 
   useEffect(() => {
-    axios.get('http://localhost:3000/api/coupons', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    }).then(res => setAvailableCoupons(res.data));
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  
+    if (token) {
+        axios.get('http://localhost:3000/api/coupons', {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        .then(res => setAvailableCoupons(res.data))
+        .catch(err => console.log("Lỗi tải mã giảm giá: ", err.response?.data || err.message));
+    }
   }, []);
 
   // State điều hướng bước thanh toán
@@ -48,10 +55,6 @@ const Checkout = () => {
     note: ''
   });
 
-  
-  
-  const [paymentMethod, setPaymentMethod] = useState('COD');
-  
   // TÍNH TỔNG TIỀN
   const totalPrice = cart.reduce((total, item) => {
     if (!item.computer) return total;
@@ -90,7 +93,7 @@ const Checkout = () => {
   useEffect(() => {
     if (user && user.address) {
       try {
-        // Đọc và parse địa chỉ từ user.address, nếu có lỗi sẽ nhảy vào catch (trường hợp dữ liệu cũ chưa được cập nhật)
+        // Đọc và parse địa chỉ từ user.address, nếu có lỗi sẽ nhảy vào catch 
         const parsed = JSON.parse(user.address);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setSavedAddresses(parsed);
@@ -179,14 +182,13 @@ const Checkout = () => {
     window.scrollTo(0, 0);
   };
 
-  // Hàm submit đơn hàng (được gọi khi chọn phương thức thanh toán ở bước 2)
+  // Hàm submit đơn hàng
   const handleSubmitOrder = async () => {
     setIsLoading(true);
     try {
       let finalAddress = '';
       let finalPhone = '';
 
-      // Kiểm tra xem khách chọn địa chỉ có sẵn hay nhập mới
       if (selectedAddressId !== 'new') {
         const chosenAddr = savedAddresses.find(a => a.id === selectedAddressId);
         finalAddress = formData.note.trim() ? `${chosenAddr.fullAddress} (Ghi chú: ${formData.note.trim()})` : chosenAddr.fullAddress;
@@ -197,28 +199,30 @@ const Checkout = () => {
         finalPhone = formData.phone;
       }
 
+      // Tạo đơn hàng mới
       const res = await orderApi.createOrder({
         shippingAddress: finalAddress,
         phone: finalPhone,
+        paymentMethod: paymentMethod, 
         couponCode: selectedCoupon ? selectedCoupon.code : null,
         discountAmount: selectedCoupon ? calculateDiscount(selectedCoupon) : 0
       });
 
-      const orderId = res.data.orderId;
+      const orderId = res.orderId || res.data?.orderId;
       setCart([]); 
-      localStorage.removeItem('cart'); // Xóa giỏ hàng
+      localStorage.removeItem('cart'); 
 
-      // XỬ LÝ VNPAY NẾU CÓ
       if (paymentMethod === 'VNPAY') {
-        toast.info('Đang chuyển hướng sang VNPAY...');
+        toast.info('Đang kết nối VNPAY...');
         const paymentRes = await orderApi.createPaymentUrl(orderId);
-        if (paymentRes.data.paymentUrl) {
-           window.location.href = paymentRes.data.paymentUrl; 
-           return;
+        
+        const vnpayUrl = paymentRes.paymentUrl || paymentRes.data?.paymentUrl;
+        if (vnpayUrl) {
+           window.location.href = vnpayUrl; 
+           return; 
         }
       }
 
-      // NẾU LÀ COD
       toast.success('Đặt hàng thành công!');
       navigate('/'); 
 

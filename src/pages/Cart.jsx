@@ -36,13 +36,26 @@ const Cart = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   const finalPrice = appliedCoupon ? totalPrice - appliedCoupon.discountAmount : totalPrice;
-  
+  const isCartValid = cart.length > 0 && cart.every(item => item.computer && item.quantity <= item.computer.stockQuantity && item.computer.stockQuantity > 0);
+
   const handleApplyCoupon = async () => {
     try {
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+
+        const config = { 
+            headers: { Authorization: `Bearer ${token}` } 
+        };
+
         const res = await axios.post('http://localhost:3000/api/coupons/apply', 
             { code: couponInput, orderValue: totalPrice },
-            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+            config 
         );
+        
+        if (!token) {
+            toast.error("Vui lòng đăng nhập để sử dụng mã giảm giá!");
+            return;
+        }
+        
         setAppliedCoupon(res.data);
         toast.success("Áp dụng mã thành công!");
     } catch (error) {
@@ -103,12 +116,34 @@ const Cart = () => {
                     <div className="col-span-1 md:col-span-6 flex gap-4">
                       <img src={getImageUrl(comp.image)} alt={comp.name} className="w-20 h-20 object-cover rounded-lg border border-gray-200" />
                       <div className="flex flex-col justify-center">
-                        <Link to={`/product/${comp.slug}`} className="font-bold text-gray-800 hover:text-cyan-600 line-clamp-2">
-                          {comp.name}
-                        </Link>
-                        {/* TRUYỀN ID CỦA CARTITEM CHỨ KHÔNG PHẢI ID MÁY TÍNH */}
+                        <Link to={`/product/${comp.slug}`} className="font-bold text-gray-800 hover:text-cyan-600 line-clamp-2">{comp.name}</Link>
+                        
+                        {comp.stockQuantity === 0 ? (
+                            <p className="text-red-500 text-xs font-bold mt-1">Sản phẩm này đã hết hàng</p>
+                        ) : item.quantity > comp.stockQuantity ? (
+                            <p className="text-orange-500 text-xs font-bold mt-1">
+                              Sản phẩm không đủ số lượng yêu cầu. Vui lòng liên hệ với admin để được hỗ trợ hoặc giảm số lượng xuống.
+                            </p>
+                        ) : null}
+
                         <button onClick={() => removeFromCart(item._id)} className="text-red-500 text-sm flex items-center gap-1 mt-2 hover:underline w-fit">
                           <Trash2 size={14} /> Xóa
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="col-span-1 md:col-span-2 text-center font-bold text-gray-700 hidden md:block">
+                      {price?.toLocaleString('vi-VN')} đ
+                    </div>
+
+                    <div className="col-span-1 md:col-span-2 flex justify-center">
+                      <div className="flex items-center border border-gray-200 rounded h-9">
+                        <button onClick={() => updateQuantity(item._id, item.quantity - 1)} className="px-3 hover:bg-gray-100 font-bold">-</button>
+                        <span className="w-8 text-center font-bold text-sm">{item.quantity}</span>
+                        <button 
+                          onClick={() => updateQuantity(item._id, item.quantity + 1)} 
+                          disabled={item.quantity >= comp.stockQuantity} 
+                          className="px-3 hover:bg-gray-100 font-bold disabled:opacity-50 disabled:cursor-not-allowed">+
                         </button>
                       </div>
                     </div>
@@ -174,11 +209,10 @@ const Cart = () => {
                 <span className="text-3xl font-black text-[#e30019]">{finalPrice.toLocaleString('vi-VN')} <span className="text-xl underline">đ</span></span>
               </div>
 
-              <button 
-                onClick={() => navigate('/checkout')}
-                className="w-full bg-[#e30019] hover:bg-red-700 text-white font-black py-3.5 rounded-lg uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-md shadow-red-500/30"
+              <button onClick={() => navigate('/checkout')} disabled={!isCartValid}
+                className="w-full bg-[#e30019] hover:bg-red-700 disabled:bg-gray-400 text-white font-black py-3.5 rounded-lg uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-md shadow-red-500/30"
               >
-                <ShieldCheck size={20} /> Tiến hành đặt hàng
+                <ShieldCheck size={20} /> {isCartValid ? 'Tiến hành đặt hàng' : 'Cập nhật lại giỏ hàng'}
               </button>
             </div>
           </div>
