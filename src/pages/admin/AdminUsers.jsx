@@ -9,7 +9,7 @@ const AdminUsers = () => {
   const [roles, setRoles] = useState([]); // Chứa danh sách vai trò
   const [loading, setLoading] = useState(true);
 
-  // States cho Modal Thêm/Sửa Người Dùng
+  // State cho model thêm/sửa người dùng
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isUserSubmitting, setIsUserSubmitting] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
@@ -17,14 +17,13 @@ const AdminUsers = () => {
   const initialUserForm = { username: '', fullname: '', email: '', password: '', phone: '', role: '' };
   const [userFormData, setUserFormData] = useState(initialUserForm);
 
-  // States cho Modal Tặng Quà
+  // State cho modal tặng coupon
   const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
   const [isGifting, setIsGifting] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [availableCoupons, setAvailableCoupons] = useState([]);
   const [selectedCouponCode, setSelectedCouponCode] = useState('');
 
-  // 1. Fetch dữ liệu Người dùng & Vai trò
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -47,8 +46,6 @@ const AdminUsers = () => {
   useEffect(() => {
     fetchData();
   }, []);
-
-  // ===================== LOGIC CRUD NGƯỜI DÙNG =====================
 
   const handleOpenUserModal = (user = null) => {
     if (user) {
@@ -78,13 +75,15 @@ const AdminUsers = () => {
 
     setIsUserSubmitting(true);
     try {
+      // Lấy token và config chung cho cả PUT và POST
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      
       const payload = { ...userFormData };
+
       // Nếu đang sửa mà bỏ trống pass -> Không cập nhật pass
       if (editingUserId && !payload.password) delete payload.password;
 
+      // Gọi API tương ứng cho thêm hoặc sửa
       if (editingUserId) {
         await axios.put(`http://localhost:3000/api/users/${editingUserId}`, payload, config);
         toast.success("Cập nhật người dùng thành công!");
@@ -106,6 +105,7 @@ const AdminUsers = () => {
     }
   };
 
+  // Xử lý xóa người dùng
   const handleDeleteUser = async (id, name) => {
     if (!window.confirm(`XÓA TÀI KHOẢN: Bạn có chắc muốn xóa vĩnh viễn "${name}"?`)) return;
     try {
@@ -118,6 +118,7 @@ const AdminUsers = () => {
     }
   };
 
+  // Xử lý khóa/mở khóa tài khoản
   const handleToggleLock = async (userId, userName, currentStatus) => {
     const actionName = currentStatus ? 'MỞ KHÓA' : 'KHÓA';
     if (!window.confirm(`Bạn có chắc muốn ${actionName} tài khoản của "${userName}"?`)) return;
@@ -131,13 +132,12 @@ const AdminUsers = () => {
     }
   };
 
-
-  // ===================== LOGIC TẶNG QUÀ (CSKH) =====================
-
+  // Xử lý mở modal tặng mã giảm giá
   const handleOpenGiftModal = async (user) => {
     setSelectedUser(user);
     setIsGiftModalOpen(true);
     setSelectedCouponCode(''); 
+
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const res = await axios.get('http://localhost:3000/api/coupons/all', { headers: { Authorization: `Bearer ${token}` } });
@@ -150,10 +150,13 @@ const AdminUsers = () => {
     } catch (error) { toast.error("Không tải được danh sách mã giảm giá!"); }
   };
 
+  // Xử lý tặng mã giảm giá 
   const handleGiftCoupon = async (e) => {
     e.preventDefault();
+
     if (!selectedCouponCode) return toast.warning("Vui lòng chọn mã giảm giá!");
     setIsGifting(true);
+
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       await axios.post('http://localhost:3000/api/coupons/gift', { userId: selectedUser._id, couponCode: selectedCouponCode }, { headers: { Authorization: `Bearer ${token}` } });
@@ -192,7 +195,6 @@ const AdminUsers = () => {
             </thead>
             <tbody className="text-sm text-gray-700 divide-y divide-gray-50">
               {users.map((user) => {
-                // FIX LỖI HIỂN THỊ ID VAI TRÒ Ở ĐÂY
                 const roleName = user.role?.name || user.role || 'Khách hàng';
 
                 return (
@@ -243,8 +245,8 @@ const AdminUsers = () => {
           </table>
         </div>
       </div>
-
-      {/* ===================== MODAL THÊM / SỬA NGƯỜI DÙNG ===================== */}
+    
+      {/* Modal tài khoản */}
       {isUserModalOpen && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 p-4">
           <div className="bg-white rounded-2xl w-full max-w-2xl flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
@@ -308,7 +310,7 @@ const AdminUsers = () => {
         </div>
       )}
 
-      {/* ===================== MODAL TẶNG MÃ GIẢM GIÁ (Giữ nguyên như cũ) ===================== */}
+      {/* Modal tặng mã */}
       {isGiftModalOpen && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 p-4">
           <div className="bg-white rounded-2xl w-full max-w-md flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">

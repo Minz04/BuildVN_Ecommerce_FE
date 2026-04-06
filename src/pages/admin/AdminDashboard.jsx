@@ -49,7 +49,7 @@ const AdminDashboard = () => {
         <p className="text-gray-500 font-medium mt-1">Dữ liệu được cập nhật theo thời gian thực</p>
       </div>
 
-      {/* HÀNG 1: 4 STAT CARDS */}
+      {/* Nọi dung chính */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5">
           <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
@@ -92,7 +92,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* HÀNG 2: Đơn hàng & Quản lý user */}
+      {/* Đơn hàng & Quản lý user */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         
         {/* Bảng đơn hàng */}

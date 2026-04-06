@@ -8,7 +8,7 @@ const axiosClient = axios.create({
   },
 });
 
-// BỘ ĐÁNH CHẶN REQUEST
+// CHặn request
 axiosClient.interceptors.request.use(
   (config) => {
     // Tìm Token ở cả LocalStorage HOẶC SessionStorage
@@ -24,13 +24,13 @@ axiosClient.interceptors.request.use(
   }
 );
 
-// BỘ ĐÁNH CHẶN RESPONSE
+// Chặn response
 axiosClient.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
-    // Xử lý đá văng khi lỗi 401
+    // Xử lý văng khi lỗi 401
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');

@@ -183,7 +183,6 @@ const ProductCard = ({ product }) => {
           </div>
         </div>
 
-        {/* KHU VỰC NÚT BẤM */}
         <div className="flex items-center justify-between mt-auto gap-1 md:gap-2">
           <button 
             onClick={(e) => { 

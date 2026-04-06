@@ -32,7 +32,7 @@ const AdminOrders = () => {
     fetchOrders();
   }, []);
 
-  // BỔ SUNG TRẠNG THÁI 'PAID' VÀO MÁY TRẠNG THÁI
+  // Hàm lấy các trạng thái có thể chuyển đến dựa trên trạng thái hiện tại
   const getAvailableOptions = (currentStatus) => {
     switch (currentStatus) {
       case 'PENDING': return ['PENDING', 'CONFIRMED', 'CANCELLED']; 
@@ -45,6 +45,7 @@ const AdminOrders = () => {
     }
   };
 
+  // Hàm xử lý cập nhật trạng thái đơn hàng
   const handleUpdateStatus = async (orderId, newStatus) => {
     let finalReason = null;
     if (newStatus === 'CANCELLED') {
@@ -85,6 +86,7 @@ const AdminOrders = () => {
     }
   };
 
+  // Hàm hiển thị chi tiết đơn hàng
   const handleOpenDetail = async (order) => {
     setSelectedOrder(order);
     setLoadingDetails(true);
@@ -113,11 +115,11 @@ const AdminOrders = () => {
     return `${BASE_URL}/images/${img}`;
   };
 
-  // BỔ SUNG MÀU SẮC CHO TRẠNG THÁI 'PAID'
+  // Hàm lấy style cho badge trạng thái
   const getStatusStyle = (status) => {
     switch(status) {
       case 'PENDING': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'PAID': return 'bg-emerald-100 text-emerald-700 border-emerald-200'; // Màu xanh ngọc sang trọng cho VNPay
+      case 'PAID': return 'bg-emerald-100 text-emerald-700 border-emerald-200'; 
       case 'CONFIRMED': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
       case 'SHIPPING': return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'DELIVERED': return 'bg-green-100 text-green-700 border-green-200';

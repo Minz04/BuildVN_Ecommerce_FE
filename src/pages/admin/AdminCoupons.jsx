@@ -8,7 +8,6 @@ const AdminCoupons = () => {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // States cho Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -16,7 +15,7 @@ const AdminCoupons = () => {
   // Form mặc định
   const initialForm = {
     code: '',
-    discountType: 'PERCENTAGE', // Hoặc FIXED
+    discountType: 'PERCENTAGE', 
     discountValue: '',
     minOrderValue: 0,
     maxDiscountAmount: '',
@@ -28,7 +27,7 @@ const AdminCoupons = () => {
   };
   const [formData, setFormData] = useState(initialForm);
 
-  // 1. Fetch dữ liệu Mã giảm giá
+  // Lấy danh sách mã giảm giá
   const fetchCoupons = async () => {
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -57,7 +56,7 @@ const AdminCoupons = () => {
     return date.toISOString().slice(0, 16); 
   };
 
-  // 2. Xử lý mở Modal
+  // Xử lý khi mở Modal (Thêm mới hoặc Sửa)
   const handleOpenModal = (coupon = null) => {
     if (coupon) {
       setEditingId(coupon._id);
@@ -86,7 +85,7 @@ const AdminCoupons = () => {
     setEditingId(null);
   };
 
-  // 3. Xử lý khi gõ Form
+  // Xử lý thay đổi form
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({ 
@@ -95,7 +94,7 @@ const AdminCoupons = () => {
     });
   };
 
-  // 4. Submit Form (Thêm hoặc Sửa)
+  // Submit Form (Thêm hoặc Sửa)
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.code || !formData.discountValue || !formData.validFrom || !formData.validUntil) {
@@ -127,7 +126,7 @@ const AdminCoupons = () => {
     }
   };
 
-  // 5. Xóa mã
+  // Xóa mã
   const handleDelete = async (id, code) => {
     if (!window.confirm(`Bạn có chắc muốn xóa mã "${code}"?`)) return;
 
@@ -222,7 +221,7 @@ const AdminCoupons = () => {
         </div>
       </div>
 
-      {/* MODAL THÊM/SỬA */}
+      {/*Modal thêm/sửa */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 p-4">
           <div className="bg-white rounded-2xl w-full max-w-2xl flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
@@ -237,7 +236,7 @@ const AdminCoupons = () => {
             <div className="p-6 overflow-y-auto max-h-[70vh] bg-white">
               <form id="couponForm" onSubmit={handleSubmit} className="space-y-5">
                 
-                {/* Dòng 1: Mã và Trạng thái */}
+                {/* Mã và Trạng thái */}
                 <div className="grid grid-cols-3 gap-5">
                   <div className="col-span-2">
                     <label className="block text-sm font-bold text-gray-700 mb-1">Mã (Code) *</label>
@@ -251,7 +250,7 @@ const AdminCoupons = () => {
                   </div>
                 </div>
 
-                {/* Dòng 2: Loại giảm và Mức giảm */}
+                {/* Loại giảm và Mức giảm */}
                 <div className="grid grid-cols-2 gap-5 p-4 bg-gray-50 rounded-xl border border-gray-100">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Loại giảm giá *</label>
@@ -266,7 +265,7 @@ const AdminCoupons = () => {
                   </div>
                 </div>
 
-                {/* Dòng 3: Điều kiện */}
+                {/* Điều kiện */}
                 <div className="grid grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Đơn tối thiểu (VNĐ)</label>
@@ -278,7 +277,7 @@ const AdminCoupons = () => {
                   </div>
                 </div>
 
-                {/* Dòng 4: Thời gian */}
+                {/* Thời gian */}
                 <div className="grid grid-cols-2 gap-5 p-4 bg-gray-50 rounded-xl border border-gray-100">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Từ ngày *</label>
@@ -290,7 +289,7 @@ const AdminCoupons = () => {
                   </div>
                 </div>
 
-                {/* Dòng 5: Giới hạn sử dụng */}
+                {/* Giới hạn sử dụng */}
                 <div className="grid grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Tổng lượt dùng hệ thống</label>

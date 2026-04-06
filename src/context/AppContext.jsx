@@ -27,14 +27,13 @@ export const AppProvider = ({ children }) => {
     const fetchCart = async () => {
       const currentToken = localStorage.getItem('token') || sessionStorage.getItem('token'); // Lấy token từ localStorage hoặc sessionStorage để kiểm tra
 
-      // Nếu đã đăng nhập (có user và token), thì mới gọi API lấy giỏ hàng
+      // Nếu đã đăng nhập, thì mới gọi API lấy giỏ hàng
       if (user && currentToken) {
         try {
           const res = await cartApi.getCart();
           setCart(res.data.cartItem || []);
         } catch (error) {
           console.error("Lỗi lấy giỏ hàng:", error);
-          // Nếu lỗi lấy giỏ hàng, tạm thời set giỏ rỗng chứ đừng làm gì khác
           setCart([]);
         }
       } else {
@@ -45,7 +44,7 @@ export const AppProvider = ({ children }) => {
     fetchCart();
   }, [user]);
 
-  // 1. Hàm Thêm vào giỏ hàng
+  // Thêm vào giỏ hàng
   const addToCart = async (product, quantityToAdd = 1) => {
     if (!user) {
       toast.warning("Vui lòng đăng nhập để mua hàng!");
@@ -64,11 +63,11 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // 2. Hàm Tăng/Giảm số lượng
+  // Tăng/Giảm số lượng
   const updateQuantity = async (cartitemId, newQuantity, stockQuantity) => {
     if (newQuantity <= 0) return;
     try {
-      await cartApi.updateQuantity(cartitemId, newQuantity); // Cập nhật số lượng trên DB
+      await cartApi.updateQuantity(cartitemId, newQuantity); 
 
       // Cập nhật state UI
       setCart(prevCart => prevCart.map(item =>
@@ -79,19 +78,19 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // 3. Hàm Xóa sản phẩm khỏi giỏ
+  // Xóa sản phẩm khỏi giỏ
   const removeFromCart = async (cartitemId) => {
     try {
       await cartApi.removeFromCart(cartitemId);
       toast.info("Đã xóa sản phẩm khỏi giỏ");
-      // Cập nhật state UI
+
       setCart(prevCart => prevCart.filter(item => item._id !== cartitemId));
     } catch (error) {
       toast.error("Lỗi xóa sản phẩm");
     }
   };
 
-  // 4. Tính tổng tiền giỏ hàng
+  // Tính tổng tiền giỏ hàng
   const getCartTotal = () => {
     return cart.reduce((total, item) => {
       const price = item.discountPrice || item.price; // Ưu tiên giá đã giảm
@@ -109,9 +108,7 @@ export const AppProvider = ({ children }) => {
       // Cập nhật state SAU
       setWishlist(prev => prev.filter(item => item._id !== product._id));
     } else {
-      // Bắn thông báo TRƯỚC
       toast.success("Đã thêm sản phẩm vào danh sách Yêu thích");
-      // Cập nhật state SAU
       setWishlist(prev => [...prev, product]);
     }
   };

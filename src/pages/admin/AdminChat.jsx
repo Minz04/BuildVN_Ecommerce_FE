@@ -12,7 +12,6 @@ const AdminChat = () => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   
-  // State cho thanh tìm kiếm
   const [searchTerm, setSearchTerm] = useState('');
 
   const socketRef = useRef(null);
@@ -129,16 +128,16 @@ const AdminChat = () => {
     }
   };
 
-  // LOGIC LỌC DANH SÁCH CHAT
+  // Lọc danh sách chat
   const filteredChats = chats.filter(chat => {
-    // 1. Chỉ hiển thị người đã từng nhắn tin
+    // Chỉ hiển thị người đã từng nhắn tin
     if (!chat.lastMessage) return false;
     
-    // 2. Không hiển thị account Admin tự chat
+    // Không hiển thị account Admin tự chat
     const role = chat.user?.role?.name || chat.user?.role;
     if (role === 'admin') return false;
 
-    // 3. Lọc theo thanh tìm kiếm
+    // Lọc theo thanh tìm kiếm
     const searchLower = searchTerm.toLowerCase();
     const userName = (chat.user?.fullname || chat.user?.username || 'Khách hàng').toLowerCase();
     return userName.includes(searchLower);
@@ -200,7 +199,7 @@ const AdminChat = () => {
           </div>
         </div>
 
-        {/* CỘT PHẢI: KHUNG CHAT */}
+        {/* Khung chat*/}
         <div className="w-2/3 flex flex-col bg-[#f8fafc]">
           {activeChat ? (
             <>

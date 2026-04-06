@@ -3,7 +3,6 @@ import axios from 'axios'; // Import thêm axios
 import { Truck, RefreshCcw, CreditCard, Headphones, MapPin, Phone, Mail, Map } from 'lucide-react';
 
 const Store_address = () => {
-  // Đổi giá trị khởi tạo thành mảng rỗng
   const [showrooms, setShowrooms] = useState([]);
 
   // Gọi API lấy danh sách showroom khi trang vừa load
@@ -91,7 +90,7 @@ const Store_address = () => {
         </div>
       </section>
 
-      {/* SHOWROOM */}
+      {/* Store address */}
       <section className="bg-slate-900 py-16 text-white relative border-t border-slate-800">
         <div className="container mx-auto px-4 relative z-10">
 

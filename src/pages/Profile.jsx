@@ -38,11 +38,10 @@ const Profile = () => {
     ward: '', wardName: '', street: '', type: 'Nhà Riêng', isDefault: false
   });
 
-  // FETCH DỮ LIỆU BAN ĐẦU
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
     
-    // ĐÃ FIX: Dùng dữ liệu Github cực kỳ ổn định, không bao giờ lỗi CORS
+    // Lấy dữ liệu tỉnh thành VN
     axios.get('https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json')
       .then(res => setProvinces(res.data)).catch(err => console.error(err));
 
@@ -86,13 +85,13 @@ const Profile = () => {
     };
     
     fetchProfile();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // HÀM LƯU HỒ SƠ 
+  // Lưu hồ sơ
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
       const res = await userApi.updateProfile({
         fullname: profileData.fullname,
@@ -101,8 +100,10 @@ const Profile = () => {
         dob: profileData.dob,
         avatar: profileData.avatar
       });
+
       setUser(res.data.user);
       localStorage.setItem('user', JSON.stringify(res.data.user));
+
       toast.success('Cập nhật hồ sơ thành công!');
     } catch (error) {
       toast.error('Có lỗi xảy ra khi cập nhật hồ sơ');
@@ -129,7 +130,7 @@ const Profile = () => {
   
   const passStrength = getPasswordStrength(passwordData.newPassword);  
 
-  // XỬ LÝ ĐỔI MẬT KHẨU 
+  // Xử lý đổi mật khẩu
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -159,7 +160,7 @@ const Profile = () => {
     }
   };
 
-  // XỬ LÝ ĐỊA CHỈ 
+  // Xử lý CURD địa chỉ
   const openModal = (addr = null) => {
     if (addr) {
       setEditingAddressId(addr.id);
@@ -252,18 +253,16 @@ const Profile = () => {
     }
   };
 
-  // RENDER UI
   if (isFetching) return <div className="min-h-screen flex justify-center items-center bg-[#f5f5f5]"><Loader2 className="animate-spin text-[#ee4d2d]" size={40}/></div>;
 
   return (
     <div className="bg-[#f5f5f5] min-h-screen pb-12 pt-6">
       <div className="container mx-auto px-4 max-w-6xl flex flex-col md:flex-row gap-6">
         
-        {/* CỘT TRÁI: MENU */}
+        {/* MENU */}
         <div className="w-full md:w-[250px] shrink-0">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-200">
-              {/* --- ĐÃ FIX LỖI HIỂN THỊ ẢNH TẠI ĐÂY --- */}
               <img 
                 src={
                   !profileData.avatar ? 'https://i.pinimg.com/736x/c6/e5/65/c6e56503cfdd87da299f72dc416023d4.jpg' 
@@ -287,10 +286,10 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* CỘT PHẢI: NỘI DUNG */}
+        {/* Nội dung */}
         <div className="flex-1 bg-white rounded-sm shadow-sm min-h-[500px]">
           
-          {/* TAB 1: HỒ SƠ */}
+          {/* Hồ sơ */}
           {activeTab === 'profile' && (
             <div className="p-6 md:p-8">
               <div className="border-b pb-4 mb-8">
@@ -399,7 +398,7 @@ const Profile = () => {
             </div>
           )}
 
-          {/* TAB 2: ĐỊA CHỈ */}
+          {/* Địa chỉ */}
           {activeTab === 'address' && (
             <div className="p-6 md:p-8">
               <div className="flex justify-between items-center border-b pb-4 mb-6">
@@ -445,7 +444,7 @@ const Profile = () => {
             </div>
           )}
 
-          {/* TAB 3: ĐỔI MẬT KHẨU */}
+          {/* Đổi mật khẩu */}
           {activeTab === 'password' && (
             <div className="p-6 md:p-8">
               <div className="border-b pb-4 mb-8">
@@ -496,7 +495,6 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* MODAL THÊM/SỬA ĐỊA CHỈ                    */}
       {showAddressModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex justify-center items-center">
           <div className="bg-white rounded-md w-[500px] shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">

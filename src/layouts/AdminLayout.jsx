@@ -44,7 +44,7 @@ const AdminLayout = () => {
           {menuItems.map((item) => {
             const Icon = item.icon;
             
-            // KIỂM TRA: Đây có phải là menu "Tin nhắn" không?
+            // Kiểm tra có phải menu "Tin nhắn" không 
             const isChatMenu = item.path === '/admin/chats';
 
             return (
@@ -63,11 +63,11 @@ const AdminLayout = () => {
               >
                 <Icon size={20} /> 
                 
-                {/* Khu vực chứa Tên menu và Chấm đỏ */}
+                {/* Khu vực chứa tên menu và chấm đỏ */}
                 <div className="flex-1 flex items-center justify-between">
                     <span>{item.label}</span>
                     
-                    {/* CHỈ HIỂN THỊ CHẤM ĐỎ Ở MENU TIN NHẮN VÀ KHI CÓ TIN CHƯA ĐỌC */}
+                    {/* Hiển thị tin nhắn nếu chưa đọc */}
                     {isChatMenu && unreadChatCount > 0 && (
                         <span className="bg-[#e30019] text-white px-2 py-0.5 rounded-full text-[11px] font-black shadow-sm animate-bounce">
                             {unreadChatCount > 9 ? '9+' : unreadChatCount}

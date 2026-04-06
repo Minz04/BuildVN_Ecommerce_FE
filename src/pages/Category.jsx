@@ -12,10 +12,11 @@ const Category = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // --- STATE DÀNH CHO PHÂN TRANG ---
+  // Phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 15; // 15 sản phẩm 1 trang
 
+  // Lấy dữ liệu danh mục và sản phẩm khi component mount hoặc slug thay đổi
   useEffect(() => {
     const fetchCategoryAndProducts = async () => {
       setLoading(true);
@@ -99,7 +100,7 @@ const Category = () => {
           </h1>
         </div>
 
-        {/* LƯỚI SẢN PHẨM (Dùng currentProducts thay vì products) */}
+        {/* Lưới sản phẩm */}
         {products.length > 0 ? (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">

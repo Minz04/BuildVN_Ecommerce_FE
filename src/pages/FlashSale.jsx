@@ -17,7 +17,7 @@ const FlashSale = () => {
         const res = await productApi.getAllProducts();
         const allProducts = res.data || [];
 
-        // LỌC RA CÁC SẢN PHẨM ĐANG GIẢM GIÁ
+        // Lọc sản phẩm đang giảm giá
         let discountedProducts = allProducts.filter(product => {
           // Tính toán giá giống hệt trong ProductCard
           const salePrice = product.discountPrice || product.price;
@@ -67,7 +67,7 @@ const FlashSale = () => {
           <span className="text-gray-800 font-bold uppercase">Flash Sale Mới Nhất</span>
         </div>
 
-        {/* Tiêu đề rực lửa */}
+        {/* Tiêu đề */}
         <div className="flex items-center gap-3 mb-8 bg-gradient-to-r from-[#e30019] to-orange-500 p-6 rounded-2xl text-white shadow-lg shadow-red-500/20">
           <div className="bg-white/20 p-3 rounded-full animate-pulse">
             <Zap size={36} className="text-yellow-300 fill-yellow-300" />

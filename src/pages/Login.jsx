@@ -7,7 +7,6 @@ import { AppContext } from '../context/AppContext';
 
 const Login = () => {
   const navigate = useNavigate();
-  // BƯỚC 2: Lấy hàm setUser ra để lưu trạng thái đăng nhập
   const { setUser } = useContext(AppContext); 
 
   const [showPassword, setShowPassword] = useState(false);

@@ -25,6 +25,7 @@ const AdminReviews = () => {
     fetchReviewStats();
   }, []);
 
+  // Hàm xử lý xóa toàn bộ đánh giá của một sản phẩm
   const handleClearAllReviews = async (computerId, computerName) => {
     const isConfirmed = window.confirm(`Bạn có chắc chắn muốn xóa toàn bộ đánh giá của sản phẩm "${computerName}" không?\n\nHành động này không thể hoàn tác!`);
     
@@ -47,6 +48,7 @@ const AdminReviews = () => {
     }
   };
 
+  // Hàm lấy URL ảnh sản phẩm
   const getImageUrl = (img) => {
     if (!img) return 'https://via.placeholder.com/150';
     if (img.startsWith('http')) return img;

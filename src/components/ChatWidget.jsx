@@ -32,9 +32,9 @@ const ChatWidget = () => {
     scrollToBottom();
   }, [messages, isChatOpen, chatProduct]);
 
-  // SỬA LẠI ĐOẠN NÀY: Giữ Socket luôn kết nối dù đóng hay mở khung chat
+  // Giữ Socket luôn kết nối dù đóng hay mở khung chat
   useEffect(() => {
-    // Chỉ kết nối khi có user đăng nhập, và user KHÔNG PHẢI là admin
+    // Chỉ kết nối khi có user đăng nhập
     if (user && user.role !== 'admin' && user.role?.name !== 'admin') {
       socketRef.current = io("http://localhost:3000");
 
@@ -43,11 +43,12 @@ const ChatWidget = () => {
         try {
           const chatRes = await chatApi.createChat();
           const currentChatId = chatRes.data.chat._id;
+
           setChatId(currentChatId);
           socketRef.current.emit("join_chat", currentChatId);
 
           const msgRes = await chatApi.getMessages(currentChatId);
-          // FIX LỖI SỐ 1: Đổi .message thành .messages (có s) để lấy được lịch sử
+
           setMessages(msgRes.data.messages || []);
         } catch (error) {
           console.error("Lỗi khởi tạo chat:", error);
@@ -58,14 +59,14 @@ const ChatWidget = () => {
 
       initChat();
 
+      // Xử lý nhận tin nhắn mới
       socketRef.current.on("receive_message", (data) => {
-        // FIX LỖI SỐ 2: Chống nhân đôi tin nhắn bên phía User
         setMessages((prev) => {
            if (prev.some(m => m._id === data._id)) return prev;
            return [...prev, data];
         });
 
-        // Báo số đỏ (Unread Count) hoạt động cực mượt vì Socket không bị ngắt nữa
+        // Báo số đỏ 
         if (!isChatOpenRef.current) {
           setUnreadCount((prev) => prev + 1);
         }
@@ -75,16 +76,16 @@ const ChatWidget = () => {
         socketRef.current.disconnect();
       };
     }
-  }, [user]); // Bỏ isChatOpen ra khỏi danh sách theo dõi
+  }, [user]); 
 
-  // HÀM XỬ LÝ ẢNH
+  // Xử lý hình ảnh 
   const getImageUrl = (img) => {
     if (!img) return 'https://via.placeholder.com/150';
     if (img.startsWith('http')) return img;
     return `http://localhost:3000/images/${img.replace(/^\/+/, '').replace('images/', '')}`;
   };
 
-  // HÀM FORMAT THỜI GIAN (VD: 14:30)
+  // Format thời gian hiển thị
   const formatTime = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -132,7 +133,7 @@ const ChatWidget = () => {
 
   if (!user) return null; 
   
-  if (user.role === 'admin' || user.role?.name === 'admin') {
+  if (user.role === 'admin' || user.role?.name === 'admin') { // Ẩn chat với admin
     return null;
   }
 
@@ -205,7 +206,7 @@ const ChatWidget = () => {
           {/* Khung nhập tin */}
           <div className="bg-white border-t border-gray-200">
             
-            {/* THẺ ĐÍNH KÈM SẢN PHẨM (Nổi lên khi bấm từ ProductDetail) */}
+            {/* Thẻ đính kèm sản phẩm*/}
             {chatProduct && (
                 <div className="p-3 bg-gray-50 border-b border-gray-200 flex justify-between items-start relative">
                     <div className="text-[12px] text-gray-500 absolute -top-3 left-3 bg-white px-2 border border-gray-200 rounded-full shadow-sm font-medium">Bạn đang hỏi về sản phẩm này</div>
@@ -253,7 +254,7 @@ const ChatWidget = () => {
             <MessageCircle size={28} />
           </button>
 
-          {/* Thông báo (Chỉ hiển thị khi unreadCount > 0 )*/}
+          {/* Thông báo */}
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#e30019] text-[11px] font-bold text-white shadow-md animate-bounce">
               {unreadCount > 9 ? '9+' : unreadCount}

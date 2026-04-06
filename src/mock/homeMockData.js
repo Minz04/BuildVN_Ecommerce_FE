@@ -3,7 +3,6 @@ const images = import.meta.glob("../assets/img/*.{png,jpg,jpeg,gif}", {
     import: "default"
 });
 
-// 3. DỮ LIỆU TIN TỨC (Chuẩn bị sẵn cho API)
 export const mockNews = [
     {
         id: "news_1",

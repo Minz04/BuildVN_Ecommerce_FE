@@ -25,7 +25,7 @@ const Cart = () => {
   }
 
   
-  // Tính tổng tiền dựa trên cấu trúc DB mới (item.computer.price)
+  // Tính tổng tiền dựa trên cấu trúc DB mới 
   const totalPrice = cart.reduce((total, item) => {
     if (!item.computer) return total;
     const priceToUse = item.computer.price;
@@ -65,7 +65,7 @@ const Cart = () => {
   };
 
   
-  // Hàm hỗ trợ lấy URL ảnh từ backend, có xử lý trường hợp đường dẫn khác nhau
+  // Hàm lấy URL ảnh 
   const getImageUrl = (img) => {
     if (!img) return 'https://via.placeholder.com/150';
     if (img.startsWith('http')) return img;
@@ -76,7 +76,7 @@ const Cart = () => {
   };
   
 
-  // 1. Hàm Thêm vào giỏ (đã được chuyển sang AppContext)
+  // Thêm vào giỏ 
   if (cart.length === 0) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center bg-gray-50">

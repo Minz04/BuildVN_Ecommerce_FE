@@ -43,6 +43,7 @@ const AdminProducts = () => {
     fetchData();
   }, []);
 
+  // Hàm mở Modal và điền dữ liệu khi chỉnh sửa
   const handleOpenModal = (product = null) => {
     setImageFile(null); 
     
@@ -50,7 +51,6 @@ const AdminProducts = () => {
       setEditingId(product._id);
       setExistingImage(product.image || ''); 
       
-      // Xử lý specs: Nếu DB trả về Object thì ép thành chuỗi Text để hiện lên ô input
       let specsText = '';
       if (product.specs) {
         specsText = typeof product.specs === 'object' ? JSON.stringify(product.specs) : product.specs;
@@ -101,6 +101,7 @@ const AdminProducts = () => {
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       
+      // Chuẩn bị dữ liệu gửi đi
       const submitData = new FormData();
       submitData.append('name', formData.name);
       submitData.append('price', formData.price);
@@ -120,6 +121,7 @@ const AdminProducts = () => {
         } 
       };
 
+      // Gửi dữ liệu
       if (editingId) {
         await axios.put(`http://localhost:3000/api/computers/${editingId}`, submitData, config);
         toast.success("Cập nhật sản phẩm thành công!");
@@ -137,6 +139,7 @@ const AdminProducts = () => {
     }
   };
 
+  // Hàm xử lý xóa sản phẩm
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Bạn có chắc muốn xóa "${name}"?`)) return;
 
@@ -152,7 +155,7 @@ const AdminProducts = () => {
     }
   };
 
-  // FIX LỖI ĐƯỜNG DẪN ẢNH Ở ĐÂY
+  // Lấy URL ảnh
   const getImageUrl = (imgName) => {
     if (!imgName) return 'https://via.placeholder.com/150?text=No+Image';
     if (imgName.startsWith('http')) return imgName;
@@ -220,7 +223,7 @@ const AdminProducts = () => {
         </div>
       </div>
 
-      {/* MODAL CẬP NHẬT / THÊM SẢN PHẨM */}
+      {/* Modal cập nhật */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 p-4">
           <div className="bg-white rounded-2xl w-full max-w-4xl flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
@@ -232,7 +235,7 @@ const AdminProducts = () => {
             <div className="p-6 overflow-y-auto bg-gray-50 max-h-[75vh]">
               <form id="productForm" onSubmit={handleSubmit} className="space-y-6">
                 
-                {/* BOX 1: THÔNG TIN CƠ BẢN */}
+                {/* Thông tin cơ bản */}
                 <div className="bg-white p-5 rounded-xl border border-gray-200">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="md:col-span-2">
@@ -261,9 +264,8 @@ const AdminProducts = () => {
                   </div>
                 </div>
 
-                {/* BOX 2: ẢNH VÀ THÔNG SỐ (THÊM LẠI THEO YÊU CẦU) */}
+                {/* Ảnh và thông số */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Ô CHỌN FILE ẢNH */}
                   <div className="bg-white p-5 rounded-xl border border-gray-200">
                     <label className="block text-sm font-bold mb-2 flex items-center gap-2"><ImageIcon size={16}/> Chọn ảnh từ máy tính</label>
                     <input type="file" accept="image/*" onChange={handleFileChange} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4 cursor-pointer" />
@@ -279,22 +281,18 @@ const AdminProducts = () => {
                     </div>
                   </div>
 
-                  {/* Ô NHẬP THÔNG SỐ KỸ THUẬT */}
+                  {/* Nhập thông số kỹ thuật */}
                   <div className="bg-white p-5 rounded-xl border border-gray-200">
                     <label className="block text-sm font-bold mb-2">Thông số kỹ thuật (Specs)</label>
                     <p className="text-xs text-gray-500 mb-2">Nhập chuỗi JSON hoặc mô tả văn bản thường.</p>
-                    <textarea 
-                      name="specs" 
-                      value={formData.specs} 
-                      onChange={handleChange} 
-                      rows="6"
+                    <textarea name="specs" value={formData.specs} onChange={handleChange} rows="6"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-cyan-500 resize-none font-mono text-sm bg-gray-50" 
                       placeholder='Ví dụ dạng JSON:
-{
-  "cpu": "Core i7",
-  "ram": "16GB",
-  "vga": "RTX 3060"
-}'
+                        {
+                          "cpu": "Core i7",
+                          "ram": "16GB",
+                          "vga": "RTX 3060"
+                        }'
                     ></textarea>
                   </div>
                 </div>

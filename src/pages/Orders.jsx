@@ -41,14 +41,13 @@ const Orders = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [cancelingId, setCancelingId] = useState(null);
 
-  // Bảo vệ route: Chưa đăng nhập thì đá về Login
+  // Nếu chưa đăng nhập thì chuyển về trang Login
   useEffect(() => {
     if (!user) {
       navigate('/login');
     }
   }, [user, navigate]);
 
-  // Gọi API lấy danh sách đơn hàng mỗi khi chuyển Tab
   const fetchOrders = async () => {
     setIsLoading(true);
     try {
@@ -147,10 +146,8 @@ const Orders = () => {
           </div>
         </div>
 
-        {/* NỘI DUNG CHÍNH (CỘT PHẢI) */}
+        {/* Nội dung chính */}
         <div className="w-full md:w-3/4">
-          
-          {/* THANH TABS TRẠNG THÁI */}
           <div className="bg-white rounded-t-xl flex overflow-x-auto shadow-sm no-scrollbar border-b">
             {TABS.map(tab => (
               <button
@@ -167,7 +164,7 @@ const Orders = () => {
             ))}
           </div>
 
-          {/* DANH SÁCH ĐƠN HÀNG */}
+          {/* Danh sách đơn hàng */}
           <div className="mt-4 space-y-4">
             {isLoading ? (
               <div className="bg-white p-10 flex flex-col items-center justify-center rounded-xl shadow-sm text-gray-500">
@@ -217,7 +214,7 @@ const Orders = () => {
                     ))}
                   </div>
 
-                  {/* Footer Đơn hàng (Tổng tiền & Nút bấm) */}
+                  {/* Footer Đơn hàng */}
                   <div className="p-5 border-t border-gray-100 bg-orange-50/30 flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4">
                     <div className="text-sm text-gray-500">
                       Ngày đặt: {new Date(order.createdAt).toLocaleDateString('vi-VN', {hour: '2-digit', minute:'2-digit'})}

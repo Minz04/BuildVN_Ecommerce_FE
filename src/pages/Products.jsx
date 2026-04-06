@@ -9,15 +9,14 @@ const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
 
-  const [allProducts, setAllProducts] = useState([]); // Chứa toàn bộ data từ BE
-  const [filteredProducts, setFilteredProducts] = useState([]); // Chứa data sau khi lọc
+  const [allProducts, setAllProducts] = useState([]); 
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // STATE BỘ LỌC VÀ SẮP XẾP
   const [priceFilter, setPriceFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
-  // 1. LẤY TOÀN BỘ SẢN PHẨM TỪ BACKEND (Chỉ gọi 1 lần khi vào trang)
+  // Lấy dữ liệu sản phẩm 
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -33,16 +32,15 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  // 2. LOGIC XỬ LÝ SEARCH & FILTER KẾT HỢP (Chạy mỗi khi data, keyword, hoặc bộ lọc thay đổi)
+  // Xử lý logic lọc và sắp xếp 
   useEffect(() => {
     if (allProducts.length === 0) return;
 
-    // Bước A: Lọc theo từ khóa Tìm kiếm (Tìm trong Tên, CPU, VGA)
+    // Lọc theo từ khóa tìm kiếm
     let results = allProducts;
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       results = results.filter(p => {
-        // Parse specs nếu nó đang là chuỗi
         let specs = p.specs;
         if (typeof specs === 'string') {
           try { specs = JSON.parse(specs); } catch (e) { specs = {}; }
@@ -54,7 +52,7 @@ const Products = () => {
       });
     }
 
-    // Bước B: Lọc theo Khoảng giá
+    // Lọc theo khoảng giá
     if (priceFilter === 'under10') {
       results = results.filter(p => (p.discountPrice || p.price) < 10000000);
     } else if (priceFilter === '10to20') {
@@ -66,7 +64,7 @@ const Products = () => {
       results = results.filter(p => (p.discountPrice || p.price) > 20000000);
     }
 
-    // Bước C: Sắp xếp
+    // Sắp xếp
     if (sortBy === 'priceAsc') {
       results.sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
     } else if (sortBy === 'priceDesc') {
@@ -80,11 +78,10 @@ const Products = () => {
   }, [allProducts, searchQuery, priceFilter, sortBy]);
 
 
-  // HÀM CẬP NHẬT URL (Để khi copy link gửi bạn bè, bộ lọc vẫn được giữ nguyên)
+  // Cập nhật URL
   const handleFilterChange = (type, value) => {
     if (type === 'price') setPriceFilter(value);
     if (type === 'sort') setSortBy(value);
-    // Lưu ý: Không cần đổi URL cho các bộ lọc phụ, chỉ giữ URL cho Search là đủ đẹp
   };
 
   if (loading) return <LoadingSpinner />;
@@ -126,7 +123,7 @@ const Products = () => {
 
         <div className="flex flex-col lg:flex-row gap-6">
 
-          {/* BỘ LỌC (CỘT TRÁI) */}
+          {/* Bộ lọc */}
           <div className="lg:w-1/4">
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 sticky top-28">
               <h3 className="font-black text-lg flex items-center gap-2 border-b border-gray-100 pb-3 mb-4 uppercase text-gray-800">
@@ -158,7 +155,7 @@ const Products = () => {
             </div>
           </div>
 
-          {/* KẾT QUẢ TÌM KIẾM (CỘT PHẢI) */}
+          {/* kết quả tìm kiếm */}
           <div className="lg:w-3/4">
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -167,7 +164,6 @@ const Products = () => {
                 ))}
               </div>
             ) : (
-              // NẾU KHÔNG TÌM THẤY SẢN PHẨM NÀO
               <div className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl shadow-sm border border-gray-100">
                 <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6">
                   <SearchX size={48} className="text-gray-300" />

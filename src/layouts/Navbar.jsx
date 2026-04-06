@@ -50,16 +50,16 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  // FETCH VÀ LẮNG NGHE THÔNG BÁO QUA SOCKET
+  // Fetch thông báo và lắng nghe sự kiện thông báo mới qua Socket.IO
   useEffect(() => {
     if (user) {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      // 1. Lấy thông báo cũ từ Database
+      // Lấy thông báo cũ từ Database
       axios.get('http://localhost:3000/api/notifications', { headers: { Authorization: `Bearer ${token}` } })
         .then(res => setNotifications(res.data))
         .catch(err => console.log("Lỗi tải thông báo", err));
 
-      // 2. Kết nối Socket để nghe thông báo mới
+      // Kết nối Socket để nghe thông báo mới
       const socket = io("http://localhost:3000");
       const userId = user._id || user.id;
       const eventName = user.role === 'admin' ? 'admin_notification' : `user_notification_${userId}`;
@@ -172,6 +172,7 @@ const Navbar = () => {
               )}
             </div>
 
+            {/* Dropdown */}
             {showNotif && (
               <div className="absolute top-[130%] right-0 w-[360px] bg-white shadow-2xl border border-gray-100 rounded-xl overflow-hidden z-[150] cursor-default" onClick={e => e.stopPropagation()}>
                 <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80">
@@ -213,6 +214,7 @@ const Navbar = () => {
             <div className="text-[14px] font-black text-gray-800 group-hover:text-cyan-600 transition-colors hidden lg:block">Giỏ hàng</div>
           </Link>
 
+          {/* Hiển thị thông tin người dùng nếu đã đăng nhập */}
           {user ? (
               <div className="relative group cursor-pointer flex items-center gap-3 pl-2 border-l border-gray-200">
               <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0">
@@ -229,10 +231,8 @@ const Navbar = () => {
                 </p>
               </div>
               
-              {/* MENU DROPDOWN */}
-              <div className="absolute top-full right-0 mt-2 w-48 bg-white shadow-lg border border-gray-100 rounded-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                          
-                {/* HIỂN THỊ NÚT ADMIN NẾU ROLE LÀ ADMIN */}
+              {/* Dropdown menu */}
+              <div className="absolute top-full right-0 mt-2 w-48 bg-white shadow-lg border border-gray-100 rounded-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">   
                 {user.role === 'admin' && (
                   <div className="px-2 pb-1 mb-1 border-b border-gray-100">
                     <Link 

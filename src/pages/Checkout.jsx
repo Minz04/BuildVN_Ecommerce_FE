@@ -55,7 +55,7 @@ const Checkout = () => {
     note: ''
   });
 
-  // TÍNH TỔNG TIỀN
+  // Tính tổng tiền
   const totalPrice = cart.reduce((total, item) => {
     if (!item.computer) return total;
     return total + (item.computer.price * item.quantity);
@@ -80,7 +80,7 @@ const Checkout = () => {
   const discountAmount = calculateDiscount(selectedCoupon);
   const finalPrice = totalPrice - discountAmount;
 
-  // LẤY DỮ LIỆU TỈNH THÀNH KHI LOAD TRANG
+  // Lấy dữ liệu tỉnh thành 
   useEffect(() => {
     axios.get('https://provinces.open-api.vn/api/?depth=3')
       .then(res => setProvinces(res.data))
@@ -93,15 +93,14 @@ const Checkout = () => {
   useEffect(() => {
     if (user && user.address) {
       try {
-        // Đọc và parse địa chỉ từ user.address, nếu có lỗi sẽ nhảy vào catch 
         const parsed = JSON.parse(user.address);
+
         if (Array.isArray(parsed) && parsed.length > 0) {
           setSavedAddresses(parsed);
           const defaultAddr = parsed.find(a => a.isDefault) || parsed[0];
           setSelectedAddressId(defaultAddr.id);
         }
       } catch (e) { 
-        // Trường hợp dữ liệu cũ chưa được cập nhật lên định dạng mới, tạo một địa chỉ tạm thời từ thông tin có sẵn
         const legacyAddress = [{
           id: 'legacy_default',
           name: user.fullname || user.username || 'Khách hàng',
@@ -116,7 +115,7 @@ const Checkout = () => {
     }
   }, [user]);
   
-  // XỬ LÝ KHI CHỌN TỈNH -> TẢI HUYỆN
+  // Chọn tỉnh -> Tải tỉnh
   const handleProvinceChange = (e) => {
     const provinceCode = e.target.value;
     const selectedProv = provinces.find(p => p.code == provinceCode);
@@ -132,7 +131,7 @@ const Checkout = () => {
     });
   };
 
-  // XỬ LÝ KHI CHỌN HUYỆN -> TẢI XÃ
+  // Chọn xã, huyện -> Tải xã, huyện
   const handleDistrictChange = (e) => {
     const districtCode = e.target.value;
     const selectedDist = districts.find(d => d.code == districtCode);
@@ -146,7 +145,7 @@ const Checkout = () => {
     });
   };
 
-  // XỬ LÝ KHI CHỌN XÃ
+  // Xử lý khi chọn phường, xã
   const handleWardChange = (e) => {
     const wardCode = e.target.value;
     const selectedWard = wards.find(w => w.code == wardCode);
@@ -282,13 +281,13 @@ const Checkout = () => {
             </div>
           </div>
 
-          {/* Bước 1: ĐIỀN THÔNG TIN */}
+          {/* Bước 1: điền thông tin */}
           {step === 1 && (
             <form onSubmit={handleNextStep} className="p-5 md:p-8">
               
               <h2 className="text-lg font-bold text-gray-800 mb-4">Địa Chỉ Nhận Hàng</h2>
 
-              {/* HIỂN THỊ SỔ ĐỊA CHỈ NẾU CÓ */}
+              {/* Hiển thị địa chỉ */}
               {savedAddresses.length > 0 && (
                 <div className="mb-6 space-y-3">
                   {savedAddresses.map(addr => (
@@ -315,7 +314,7 @@ const Checkout = () => {
                 </div>
               )}
 
-              {/* FORM NHẬP TAY (Chỉ hiện khi ko có địa chỉ hoặc chọn Nhập mới) */}
+              {/* Nhập địa chỉ tay */}
               {selectedAddressId === 'new' && (
                 <div className="bg-gray-50 p-4 md:p-5 rounded-xl border border-gray-200 mb-6 animate-in fade-in slide-in-from-top-2">
                   <h3 className="font-bold text-gray-700 mb-4">Thông tin người nhận</h3>
@@ -370,9 +369,6 @@ const Checkout = () => {
                 </div>
               )}
 
-              {/* Ô Nhập ghi chú */}
-              <input type="text" placeholder="Lưu ý, yêu cầu khác (Không bắt buộc)" value={formData.note} onChange={(e)=>setFormData({...formData, note: e.target.value})} className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:border-[#0071e3] mb-6" />
-
               <div className="border-t border-gray-200 mt-6 pt-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
                 <span className="font-bold text-gray-800 text-lg">Tổng tiền:</span>
                 <span className="text-2xl font-black text-[#e30019]">{totalPrice.toLocaleString('vi-VN')}<span className="underline ml-1">đ</span></span>
@@ -385,11 +381,11 @@ const Checkout = () => {
             </form>
           )}
 
-          {/* Bước 2: CHỌN MÃ GIẢM GIÁ VÀ PHƯƠNG THỨC THANH TOÁN */}
+          {/* Bước 2: Chọn coupon & thanh toán */}
           {step === 2 && (
             <div className="p-5 md:p-8">
               
-              {/* --- DANH SÁCH MÃ GIẢM GIÁ --- */}
+              {/* Danh sách mã giảm giá */}
               <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                 Mã giảm giá của bạn
               </h2>
@@ -452,13 +448,13 @@ const Checkout = () => {
                 )}
               </div>
 
-              {/* --- PHƯƠNG THỨC THANH TOÁN --- */}
+              {/* Phương thức thanh toán*/}
               <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <CreditCard className="text-[#0071e3]" /> Chọn phương thức thanh toán
               </h2>
 
               <div className="space-y-4 mb-8"> 
-                {/* Thanh toán VNPAY */}
+                {/* VNPAY */}
                 <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${paymentMethod === 'VNPAY' ? 'border-[#0071e3] bg-blue-50/50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'}`}>
                   <input type="radio" name="payment" value="VNPAY" checked={paymentMethod === 'VNPAY'} onChange={() => setPaymentMethod('VNPAY')} className="w-5 h-5 text-[#0071e3] accent-[#0071e3]" />
                   <div className="ml-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
@@ -471,7 +467,7 @@ const Checkout = () => {
                 </label>
               </div>
 
-              {/* --- TỔNG KẾT TIỀN (Đã tích hợp biến finalPrice) --- */}
+              {/* Tổng kết tiền */}
               <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 mb-6 flex flex-col gap-3">
                 <div className="flex justify-between items-center text-gray-600 font-medium">
                   <span>Tạm tính:</span>

@@ -5,11 +5,9 @@ import { Timer, ChevronRight, Zap, TrendingUp, Newspaper, Sparkles } from 'lucid
 import ProductCard from '../components/ProductCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 
-// Chỉ import mockNews cho phần tin tức ở cuối trang, ĐÃ XÓA mockBanners
 import { mockNews } from '../mock/homeMockData'; 
 import { productApi } from '../services/productApi';
 
-// COMPONENT DANH MỤC 
 const CategorySection = ({ title, slug, products }) => {
   const displayProducts = products.slice(0, 5);
 
@@ -39,13 +37,13 @@ const CategorySection = ({ title, slug, products }) => {
   );
 };
 
-// TRANG CHỦ MAIN 
+// Main
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // STATE CHỨA DATA BANNER TỪ BACKEND
+  //State chứa banner
   const [mainBanners, setMainBanners] = useState([]);
   const [subBanners, setSubBanners] = useState([]);
 
@@ -78,10 +76,10 @@ const Home = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  // GỌI API LẤY DỮ LIỆU SẢN PHẨM, DANH MỤC VÀ BANNER
+  // Lấy dữ liệu sản phẩm và danh mục từ backend 
   useEffect(() => {
     const fetchHomeData = async () => {
-      // 1. Lấy Sản phẩm và Danh mục
+      // Lấy sản phẩm và danh mục
       try {
         const [productRes, categoryRes] = await Promise.all([
           productApi.getAllProducts(), 
@@ -93,7 +91,7 @@ const Home = () => {
         console.error("Lỗi lấy dữ liệu Sản phẩm/Danh mục:", error);
       }
 
-      // 2. Lấy Banner từ Backend
+      // Lấy banner 
       try {
         const bannerRes = await productApi.getBanners();
         if (bannerRes.data && bannerRes.data.length > 0) {
@@ -110,7 +108,6 @@ const Home = () => {
     fetchHomeData();
   }, []);
 
-  // HÀM TẠO LINK ẢNH TRỰC TIẾP TỪ BACKEND (Lưu ý Port 3000)
   const getImageUrl = (img) => {
     if (!img) return '';
     if (img.startsWith('http')) return img;
@@ -149,11 +146,11 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-[#f8fafc] bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px]">
       
-      {/* KHU VỰC BANNERS - ĐÃ CHUYỂN SANG DÙNG DATA TỪ BACKEND */}
+      {/* Banner */}
       <section className="pb-8 pt-6">
         <div className="container mx-auto px-4">
           
-          {/* BANNER CHÍNH (MAIN) */}
+          {/* Banner chính */}
           {mainBanners.length > 0 && (
             <div className="rounded-2xl overflow-hidden shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15)] mb-6 leading-none border border-gray-100">
               <Slider {...bannerSettings}>
@@ -173,7 +170,7 @@ const Home = () => {
             </div>
           )}
           
-          {/* BANNER PHỤ (SUB) */}
+          {/* Banner phụ*/}
           {subBanners.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {subBanners.slice(0, 3).map((banner) => (
@@ -252,7 +249,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* SẢN PHẨM BÁN CHẠY */}
+      {/* Sản phẩm bán chạy */}
       <section className="py-14 bg-white border-b border-gray-100 relative">
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex items-center justify-center gap-3 mb-10 relative">
@@ -268,7 +265,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* DANH MỤC TỰ ĐỘNG */}
+      {/* Danh mục */}
       {categories.map(category => {
         const productsInCategory = products.filter(p => {
             if (!p.category) return false;

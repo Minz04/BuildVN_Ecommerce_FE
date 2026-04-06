@@ -2,11 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
-// XÓA DÒNG NÀY: import { mockAuthAPI } from '../mock/authMock'; 
-// THÊM DÒNG NÀY:
 import { authApi } from '../services/authApi'; 
 
-// Component input tái sử dụng cho form
 const InputField = ({ label, type, name, placeholder, value, onChange, onBlur, error }) => (
   <div className="flex flex-col gap-1 w-full">
     <label className="text-sm font-bold text-gray-900">
@@ -22,14 +19,12 @@ const InputField = ({ label, type, name, placeholder, value, onChange, onBlur, e
   </div>
 );
 
-// MAIN COMPONENT
 const Register = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  // STATE: FORM DỮ LIỆU VÀ LỖI
   const [formData, setFormData] = useState({
     fullname: '', username: '', email: '', phone: '', address: '', password: '', confirmPassword: ''
   });

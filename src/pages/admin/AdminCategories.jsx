@@ -79,9 +79,11 @@ const AdminCategories = () => {
   };
 
   const handleDelete = async (id, name) => {
+    // Xác nhận trước khi xóa
     if (!window.confirm(`Bạn có chắc muốn xóa danh mục "${name}"? Các sản phẩm thuộc danh mục này có thể bị ảnh hưởng!`)) return;
 
     try {
+      // Lấy token để xác thực
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       await axios.delete(`http://localhost:3000/api/categories/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -95,6 +97,7 @@ const AdminCategories = () => {
 
   if (loading) return <div className="h-full flex items-center justify-center"><LoadingSpinner /></div>;
 
+  {/* CONTAINER CHÍNH */}
   return (
     <div className="p-6 md:p-8 relative">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -139,7 +142,7 @@ const AdminCategories = () => {
         </div>
       </div>
 
-      {/* MODAL THÊM/SỬA */}
+      {/* Thêm/sửa */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">

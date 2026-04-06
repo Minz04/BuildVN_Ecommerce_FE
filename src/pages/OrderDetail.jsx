@@ -16,7 +16,7 @@ const OrderDetail = () => {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // STATE CHO CHỨC NĂNG ĐÁNH GIÁ
+  // State đánh giá
   const [reviewModal, setReviewModal] = useState({ isOpen: false, item: null, isChecking: false });
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);

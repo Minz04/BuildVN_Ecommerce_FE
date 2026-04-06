@@ -15,7 +15,7 @@ const AdminStores = () => {
     name: '', address: '', phone: '', email: '', mapLink: '', isActive: true
   });
 
-  // 1. Fetch dữ liệu
+  // Fetch dữ liệu
   const fetchStores = async () => {
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -32,7 +32,7 @@ const AdminStores = () => {
 
   useEffect(() => { fetchStores(); }, []);
 
-  // 2. Xử lý mở Form Thêm/Sửa
+  // Xử lý mở form thêm/sửa
   const handleOpenModal = (store = null) => {
     if (store) {
       setEditingStore(store);
@@ -47,7 +47,7 @@ const AdminStores = () => {
     setIsModalOpen(true);
   };
 
-  // 3. Xử lý Submit Form (Lưu dữ liệu)
+  // Xử lý Submit Form 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -69,7 +69,7 @@ const AdminStores = () => {
     }
   };
 
-  // 4. Xử lý Xóa
+  // Xử lý Xóa
   const handleDelete = async (id, name) => {
     if (!window.confirm(`⚠️ NGUY HIỂM: Bạn có chắc chắn muốn XÓA cửa hàng "${name}" không?`)) return;
     
@@ -157,7 +157,7 @@ const AdminStores = () => {
         </div>
       </div>
 
-      {/* MODAL FORM THÊM / SỬA */}
+      {/* Modal thêm/sửa */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden scale-in-center flex flex-col max-h-[90vh]">

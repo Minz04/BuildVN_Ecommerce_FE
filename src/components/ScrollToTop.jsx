@@ -6,7 +6,6 @@ const ScrollToTop = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    // Trình duyệt sẽ tự động cuộn lên toạ độ x: 0, y: 0 mỗi khi đường dẫn thay đổi
     window.scrollTo({
       top: 0,
       left: 0,
@@ -14,7 +13,6 @@ const ScrollToTop = () => {
     });
   }, [pathname]);
 
-  // Component này chỉ chạy logic ngầm, không render ra giao diện gì cả
   return null;
 };
 
